@@ -72,6 +72,8 @@ model Clinic {
   subscriptions    Subscription[]
   leads            Lead[]
   generationUsage  GenerationUsage[]
+  reviews          Review[]
+  patients         Patient[]
 
   @@map("clinics")
 }
@@ -192,6 +194,8 @@ model Lead {
   source    LeadSource
   createdAt DateTime   @default(now()) @map("created_at")
 
+  patient   Patient?
+
   @@index([clinicId])
   @@map("leads")
 }
@@ -205,6 +209,45 @@ model PromptTemplate {
   updatedBy String?  @map("updated_by")
 
   @@map("prompt_templates")
+}
+
+// v2 §1 (reputation management) — clinic's Google reviews, plus an
+// AI-drafted reply the owner edits and posts to Google themselves.
+// No direct-post integration yet (that needs Business Profile API
+// verification) — this is a draft-and-copy workflow.
+model Review {
+  id              String    @id @default(cuid())
+  clinicId        String    @map("clinic_id")
+  clinic          Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  googleReviewId  String    @unique @map("google_review_id")
+  authorName      String    @map("author_name")
+  rating          Int
+  text            String?
+  reviewTime      DateTime  @map("review_time")
+  suggestedReply  String?   @map("suggested_reply")
+  replyGeneratedAt DateTime? @map("reply_generated_at")
+  fetchedAt       DateTime  @default(now()) @map("fetched_at")
+
+  @@index([clinicId])
+  @@map("reviews")
+}
+
+// v2 §3 (minimal retention) — owner manually converts a lead into a patient
+// and updates last_visit_date themselves. No booking-system integration.
+model Patient {
+  id            String    @id @default(cuid())
+  clinicId      String    @map("clinic_id")
+  clinic        Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  leadId        String?   @unique @map("lead_id")
+  lead          Lead?     @relation(fields: [leadId], references: [id])
+  name          String?
+  phone         String?
+  lastVisitDate DateTime? @map("last_visit_date")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([clinicId])
+  @@map("patients")
 }
 
 model GenerationUsage {

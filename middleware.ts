@@ -35,5 +35,9 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|favicon.ico).*)"],
+  // Exclude _next internals, API routes, and any path with a file extension
+  // (favicon.ico, /screenshots/*.png, robots.txt, etc.) — static assets must
+  // never be rewritten into the per-host clinic-site renderer, and Next's
+  // own image optimizer fetches these internally on every request.
+  matcher: ["/((?!_next|api|.*\\..*).*)"],
 };

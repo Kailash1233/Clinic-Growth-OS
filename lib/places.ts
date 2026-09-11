@@ -112,3 +112,40 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceSearchResul
     editorialSummary: p.editorialSummary?.text ?? null,
   };
 }
+
+export type PlaceReview = {
+  googleReviewId: string;
+  authorName: string;
+  rating: number;
+  text: string | null;
+  reviewTime: Date;
+};
+
+/**
+ * v2 §1 (reputation management) — Places API (New) returns up to 5 most
+ * relevant reviews on the `reviews` field of Place Details. There's no
+ * paginated "all reviews" endpoint; this is the full set Google exposes.
+ */
+export async function getPlaceReviews(placeId: string): Promise<PlaceReview[]> {
+  const res = await fetch(`${PLACES_BASE}/places/${placeId}`, {
+    headers: {
+      "X-Goog-Api-Key": requireKey(),
+      "X-Goog-FieldMask": "reviews",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Place reviews fetch failed: ${res.status} ${await res.text()}`);
+  }
+
+  const data = await res.json();
+  const reviews = (data.reviews ?? []) as any[];
+
+  return reviews.map((r) => ({
+    googleReviewId: r.name as string,
+    authorName: r.authorAttribution?.displayName ?? "Anonymous",
+    rating: typeof r.rating === "number" ? r.rating : 0,
+    text: r.text?.text ?? null,
+    reviewTime: new Date(r.publishTime),
+  }));
+}

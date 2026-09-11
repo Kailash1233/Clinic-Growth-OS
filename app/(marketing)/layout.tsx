@@ -1,8 +1,19 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { Fraunces, Inter } from "next/font/google";
 import "@/app/globals.css";
 import SessionProvider from "@/components/providers/SessionProvider";
-import NavAuthStatus from "@/components/NavAuthStatus";
+
+const display = Fraunces({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-display",
+});
+
+const body = Inter({
+  subsets: ["latin"],
+  variable: "--font-body",
+});
 
 export const metadata = {
   title: "Clinic Growth — see your clinic's growth score",
@@ -11,19 +22,9 @@ export const metadata = {
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-white text-slate-900 antialiased">
-        <SessionProvider>
-          <header className="border-b border-slate-100">
-            <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-              <Link href="/" className="font-semibold text-slate-900">
-                Clinic Growth
-              </Link>
-              <NavAuthStatus />
-            </div>
-          </header>
-          {children}
-        </SessionProvider>
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
+      <body className="min-h-screen bg-cream-50 text-navy-900 antialiased">
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );

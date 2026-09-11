@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TurnstileWidget from "@/components/TurnstileWidget";
+import SimpleHeader from "@/components/SimpleHeader";
 
 function LoginForm() {
   const router = useRouter();
@@ -57,7 +58,9 @@ function LoginForm() {
   }
 
   return (
-    <main className="mx-auto max-w-sm px-6 py-20">
+    <>
+      <SimpleHeader />
+      <main className="mx-auto max-w-sm px-6 py-20">
       <h1 className="text-2xl font-bold text-slate-900">Sign in</h1>
       <p className="mt-2 text-slate-500">We'll email or text you a one-time code — no password needed.</p>
 
@@ -102,7 +105,8 @@ function LoginForm() {
           </button>
         </form>
       )}
-    </main>
+      </main>
+    </>
   );
 }
 
