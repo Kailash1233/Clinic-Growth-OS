@@ -125,3 +125,99 @@ export async function generateSiteContent(
 
   return { content: JSON.parse(raw) as GeneratedSiteContent, promptVersion: version };
 }
+
+// --- v2 §1: reputation management -----------------------------------------
+
+const REVIEW_REPLY_SYSTEM_PROMPT = `You are drafting a reply, on behalf of a healthcare clinic's owner, to one Google review of their clinic. The owner will read, edit, and personally post whatever you draft — you are not posting anything yourself.
+
+Hard rules — never break these:
+1. Never admit clinical or medical fault, never concede a diagnostic or treatment error, and never make any medical claim — even in response to a negative review. If the review describes a clinical concern, the reply should offer to discuss it privately (phone/in person), not address it in the public reply.
+2. Never be defensive or argumentative, even when the review seems unfair. Stay polite and brief.
+3. Reference something specific and real from the review text when possible (e.g. wait time, staff friendliness, cleanliness) — do not write a generic templated reply that could apply to any review.
+4. Never invent facts about the clinic not given to you (no fabricated policies, staff names, or promises).
+5. Keep it short: 2-4 sentences.
+6. Thank the reviewer by first name if given.
+7. Output must be valid JSON matching the schema exactly. No text outside the JSON object.`;
+
+const REVIEW_REPLY_SCHEMA = {
+  name: "review_reply",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      reply: { type: "string" },
+    },
+    required: ["reply"],
+  },
+} as const;
+
+export async function generateReviewReply(params: {
+  clinicName: string;
+  authorName: string;
+  rating: number;
+  text: string | null;
+}): Promise<string> {
+  const openai = getClient();
+
+  const userPrompt = `Clinic: ${params.clinicName}
+Reviewer: ${params.authorName}
+Rating: ${params.rating} / 5
+Review text: ${params.text ?? "(no text — rating only)"}
+
+Draft a reply.`;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: REVIEW_REPLY_SYSTEM_PROMPT },
+      { role: "user", content: userPrompt },
+    ],
+    response_format: { type: "json_schema", json_schema: REVIEW_REPLY_SCHEMA },
+  });
+
+  const raw = completion.choices[0]?.message?.content;
+  if (!raw) throw new Error("OpenAI returned no content");
+
+  return (JSON.parse(raw) as { reply: string }).reply;
+}
+
+const SENTIMENT_SYSTEM_PROMPT = `You summarize a healthcare clinic's recent Google reviews into one short, honest rollup sentence for the clinic owner's dashboard. Base it strictly on the review text and ratings given — never invent a theme that isn't actually present in the reviews. If reviews are too few or too mixed to identify a clear pattern, say so plainly rather than forcing a conclusion. Output must be valid JSON matching the schema. No text outside the JSON object.`;
+
+const SENTIMENT_SCHEMA = {
+  name: "sentiment_summary",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      summary: { type: "string" },
+    },
+    required: ["summary"],
+  },
+} as const;
+
+export async function generateSentimentSummary(
+  reviews: { rating: number; text: string | null }[]
+): Promise<string> {
+  if (reviews.length === 0) return "No reviews yet.";
+
+  const openai = getClient();
+  const userPrompt = reviews
+    .map((r, i) => `${i + 1}. Rating ${r.rating}/5 — ${r.text ?? "(no text)"}`)
+    .join("\n");
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: SENTIMENT_SYSTEM_PROMPT },
+      { role: "user", content: `Recent reviews:\n${userPrompt}` },
+    ],
+    response_format: { type: "json_schema", json_schema: SENTIMENT_SCHEMA },
+  });
+
+  const raw = completion.choices[0]?.message?.content;
+  if (!raw) throw new Error("OpenAI returned no content");
+
+  return (JSON.parse(raw) as { summary: string }).summary;
+}

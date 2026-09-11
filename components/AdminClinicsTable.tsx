@@ -45,6 +45,12 @@ export default function AdminClinicsTable() {
     setBusyId(null);
   }
 
+  async function handleSyncReviews(id: string) {
+    setBusyId(id);
+    await fetch(`/api/admin/clinics/${id}/reviews-sync`, { method: "POST" });
+    setBusyId(null);
+  }
+
   if (loading) return <p className="text-slate-500">Loading…</p>;
 
   return (
@@ -82,6 +88,13 @@ export default function AdminClinicsTable() {
                   className="text-brand-700 underline disabled:opacity-50"
                 >
                   Regenerate
+                </button>
+                <button
+                  onClick={() => handleSyncReviews(c.id)}
+                  disabled={busyId === c.id}
+                  className="text-brand-700 underline disabled:opacity-50"
+                >
+                  Sync reviews
                 </button>
               </td>
             </tr>

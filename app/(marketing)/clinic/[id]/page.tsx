@@ -5,6 +5,7 @@ import { getServerAuthSession } from "@/lib/auth";
 import ScoreBreakdown from "@/components/ScoreBreakdown";
 import GenerateDemoButton from "@/components/GenerateDemoButton";
 import CheckoutButton from "@/components/CheckoutButton";
+import SimpleHeader from "@/components/SimpleHeader";
 
 export default async function ClinicPage({ params }: { params: { id: string } }) {
   const clinic = await prisma.clinic.findUnique({
@@ -24,7 +25,9 @@ export default async function ClinicPage({ params }: { params: { id: string } })
   const baseDomain = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <>
+      <SimpleHeader />
+      <main className="mx-auto max-w-2xl px-6 py-16">
       <h1 className="text-2xl font-bold text-slate-900">{clinic.name}</h1>
       <p className="mt-1 text-slate-500">{clinic.address}</p>
 
@@ -71,6 +74,7 @@ export default async function ClinicPage({ params }: { params: { id: string } })
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </>
   );
 }
