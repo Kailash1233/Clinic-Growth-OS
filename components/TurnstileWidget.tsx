@@ -18,7 +18,14 @@ export default function TurnstileWidget({ onVerify }: { onVerify: (token: string
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
-    if (!siteKey || !ref.current) return;
+    // No site key configured (local/dev) — server-side verifyTurnstileToken()
+    // already soft-passes in this case, so don't block the form on a widget
+    // that has nothing to render.
+    if (!siteKey) {
+      onVerify("dev-bypass-no-turnstile-key");
+      return;
+    }
+    if (!ref.current) return;
     if (typeof window === "undefined" || !window.turnstile) return;
     window.turnstile.render(ref.current, {
       sitekey: siteKey,
