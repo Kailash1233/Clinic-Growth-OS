@@ -5,6 +5,12 @@ growth score → AI-generated demo website → Razorpay checkout → live hosted
 subdomain or custom domain. Full spec in [`docs/requirements.md`](docs/requirements.md);
 the OpenAI prompt template lives at [`prompts/site-generation.md`](prompts/site-generation.md).
 
+**v2 additions** (per `v2-features.md`): reputation management (review inbox +
+AI-drafted replies + sentiment, `/dashboard/reviews`) and minimal patient retention
+(`/dashboard/patients`) — both reuse existing API keys, nothing new required. Social
+media automation from that doc is intentionally not built yet (phase 3, per its own
+build-order note). The marketing home page is the `landing-page-v2-prompt.md` rebuild.
+
 ## Stack
 
 Next.js (App Router) · PostgreSQL + Prisma · Auth.js (OTP) · OpenAI structured outputs ·
@@ -79,5 +85,7 @@ your deployment platform's environment variables.
 | `OTP_PROVIDER_API_KEY` (+ `MSG91_TEMPLATE_ID`) | SMS OTP | MSG91 (or swap `lib/otp.ts` for Twilio Verify) |
 | `RESEND_API_KEY` | Email OTP fallback, receipts | resend.com |
 | `APP_BASE_DOMAIN` | Subdomain hosting (`{slug}.<this>`) | Your chosen brand domain |
+| `NEXT_PUBLIC_HERO_BADGE_TEXT` *(optional)* | Landing page hero pill text | Your own honest copy — defaults to "Built for Indian clinics" |
+| `PARTNER_LOGOS` *(optional)* | Landing page trust-banner logos | Comma-separated names; row stays hidden until set |
 
 See `.env.example` for the full list with inline notes.
