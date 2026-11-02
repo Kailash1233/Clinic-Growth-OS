@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { generateReviewReply } from "@/lib/openai";
+import { generateReviewReply } from "@/lib/aiProvider";
 
 async function loadOwnedReview(reviewId: string, clinicId: string | undefined) {
   const review = await prisma.review.findUnique({ where: { id: reviewId }, include: { clinic: true } });

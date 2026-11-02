@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getPlaceReviews } from "@/lib/places";
+import { getPlaceReviews } from "@/lib/placesProvider";
 
 /** v2 §1: pull a clinic's current Google reviews and upsert them, deduped by google_review_id. */
 export async function syncClinicReviews(clinicId: string, googlePlaceId: string) {

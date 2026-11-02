@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { generateSiteContent } from "@/lib/openai";
+import { generateSiteContent } from "@/lib/aiProvider";
 import { extractCity, formatOpeningHours } from "@/lib/clinicIngest";
 
 /** Requirements §11: manually trigger regeneration for any clinic (bypasses the subscriber gate — admin action). */

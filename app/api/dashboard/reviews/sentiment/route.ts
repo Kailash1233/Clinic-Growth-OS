@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { generateSentimentSummary } from "@/lib/openai";
+import { generateSentimentSummary } from "@/lib/aiProvider";
 
 /** v2 §1: on-demand sentiment rollup over the clinic's most recent reviews. */
 export async function POST() {

@@ -28,7 +28,7 @@ export default function GenerateDemoButton({ clinicId }: { clinicId: string }) {
       <button
         onClick={handleGenerate}
         disabled={loading}
-        className="rounded-lg bg-brand-600 px-6 py-3 font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+        className="rounded-lg bg-gold-500 px-6 py-3 font-medium text-navy-950 transition hover:bg-gold-400 disabled:opacity-50"
       >
         {loading ? "Generating your site…" : "Generate my free AI demo site"}
       </button>
