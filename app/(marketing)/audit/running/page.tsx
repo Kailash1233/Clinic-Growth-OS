@@ -4,15 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuditProgress from "@/components/AuditProgress";
+import { runAudit, type AuditResult } from "@/lib/runAudit";
 
-type Pending = { query: string; token: string };
-type FetchOutcome = { ok: true; clinicId: string } | { ok: false; error: string };
+type Pending = { query: string };
+type Outcome = { ok: true; result: AuditResult } | { ok: false; error: string };
 
 export default function AuditRunningPage() {
   const router = useRouter();
   const [query, setQuery] = useState<string | null>(null);
   const [animationDone, setAnimationDone] = useState(false);
-  const [fetchOutcome, setFetchOutcome] = useState<FetchOutcome | null>(null);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
   const navigated = useRef(false);
 
   useEffect(() => {
@@ -24,32 +25,30 @@ export default function AuditRunningPage() {
     const pending = JSON.parse(raw) as Pending;
     setQuery(pending.query);
 
-    fetch("/api/clinics/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: pending.query, turnstileToken: pending.token }),
-    })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "We couldn't find that business.");
-        setFetchOutcome({ ok: true, clinicId: data.clinic.id });
-      })
-      .catch((err: Error) => {
-        setFetchOutcome({ ok: false, error: err.message || "Something went wrong." });
-      });
+    try {
+      const result = runAudit(pending.query);
+      if (!result) {
+        setOutcome({ ok: false, error: "We couldn't find that business." });
+      } else {
+        setOutcome({ ok: true, result });
+      }
+    } catch {
+      setOutcome({ ok: false, error: "Something went wrong." });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!animationDone || !fetchOutcome || navigated.current) return;
+    if (!animationDone || !outcome || navigated.current) return;
     navigated.current = true;
     sessionStorage.removeItem("pendingAudit");
-    if (fetchOutcome.ok) {
-      router.push(`/clinic/${fetchOutcome.clinicId}`);
+    if (outcome.ok) {
+      sessionStorage.setItem(`auditResult:${outcome.result.place.placeId}`, JSON.stringify(outcome.result));
+      router.push(`/report?id=${encodeURIComponent(outcome.result.place.placeId)}`);
     }
-  }, [animationDone, fetchOutcome, router]);
+  }, [animationDone, outcome, router]);
 
-  const failed = animationDone && fetchOutcome && !fetchOutcome.ok;
+  const failed = animationDone && outcome && !outcome.ok;
 
   return (
     <main className="min-h-screen bg-white px-6 py-16">
@@ -82,7 +81,7 @@ export default function AuditRunningPage() {
           ) : (
             <div className="text-center">
               <p className="font-medium text-ink-900">
-                {fetchOutcome && !fetchOutcome.ok ? fetchOutcome.error : "Something went wrong."}
+                {outcome && !outcome.ok ? outcome.error : "Something went wrong."}
               </p>
               <a
                 href="/"

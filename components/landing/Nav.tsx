@@ -25,12 +25,12 @@ export default function Nav() {
         <Link href="/" className="text-lg font-bold text-ink-900">
           Clinic<span className="text-mint-500">Growth</span>
         </Link>
-        <Link
-          href="/login"
+        <a
+          href="mailto:hello@yourbrand.in"
           className="rounded-full bg-mint-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-mint-600"
         >
-          Login
-        </Link>
+          Contact us
+        </a>
       </div>
     </nav>
   );

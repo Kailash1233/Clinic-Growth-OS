@@ -2,32 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import TurnstileWidget from "@/components/TurnstileWidget";
 
 const DEMO_BUSINESS_NAME = "Lakshmi Dental Care";
 
 /**
- * Hits the real /api/clinics/search endpoint (Turnstile + rate-limited,
- * requirements.md §10) — used in both the hero and the final-CTA section.
- * In demo mode (no GOOGLE_PLACES_API_KEY set) the search still runs for
- * real, it just resolves against lib/mockBusinessData.ts instead of the
- * live Places API — same endpoint, same code path either way.
+ * Frontend-only build: there's no server to protect, so this just stores
+ * the query and hands off to /audit/running, which runs the whole
+ * search -> score -> insights pipeline client-side (lib/runAudit.ts).
  */
 export default function SearchForm({ variant = "hero" }: { variant?: "hero" | "compact" }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   function runAudit(value: string) {
-    if (!token) {
-      setError("Please complete the verification challenge.");
-      return;
-    }
     setLoading(true);
-    setError(null);
-    sessionStorage.setItem("pendingAudit", JSON.stringify({ query: value, token }));
+    sessionStorage.setItem("pendingAudit", JSON.stringify({ query: value }));
     router.push("/audit/running");
   }
 
@@ -62,12 +52,6 @@ export default function SearchForm({ variant = "hero" }: { variant?: "hero" | "c
             {loading ? "Starting…" : "Run My Growth Audit"}
           </button>
         </div>
-
-        <div className={isHero ? "text-ink-500" : "text-white/70"}>
-          <TurnstileWidget onVerify={setToken} />
-        </div>
-
-        {error && <p className="text-sm text-red-500">{error}</p>}
       </form>
 
       <div

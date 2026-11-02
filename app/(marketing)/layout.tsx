@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
 import "@/app/globals.css";
-import SessionProvider from "@/components/providers/SessionProvider";
 
 // STKBureauSans (Owner.com's own typeface) isn't legally distributable here —
 // Inter is the closest widely-available alternative: a clean geometric sans
@@ -20,9 +19,7 @@ export const metadata = {
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={display.variable}>
-      <body className="min-h-screen bg-white text-ink-900 antialiased">
-        <SessionProvider>{children}</SessionProvider>
-      </body>
+      <body className="min-h-screen bg-white text-ink-900 antialiased">{children}</body>
     </html>
   );
 }

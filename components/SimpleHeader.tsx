@@ -1,5 +1,4 @@
 import Link from "next/link";
-import NavAuthStatus from "@/components/NavAuthStatus";
 
 export default function SimpleHeader() {
   return (
@@ -8,7 +7,9 @@ export default function SimpleHeader() {
         <Link href="/" className="text-lg font-bold text-ink-900">
           Clinic<span className="text-mint-500">Growth</span>
         </Link>
-        <NavAuthStatus />
+        <a href="mailto:hello@yourbrand.in" className="text-sm font-semibold text-mint-500 hover:underline">
+          Contact us
+        </a>
       </div>
     </header>
   );

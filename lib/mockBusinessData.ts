@@ -1,5 +1,5 @@
-import type { PlaceSearchResult } from "@/lib/places";
-import type { PlaceReview } from "@/lib/places";
+import type { PlaceSearchResult } from "@/lib/types";
+import type { PlaceReview } from "@/lib/types";
 
 /**
  * Demo-mode data: two curated, realistic business profiles plus a
