@@ -40,7 +40,7 @@ export default function CheckoutButton({
         subscription_id: data.subscriptionId,
         name: "Clinic Growth",
         description: `${clinicName} — ${planTier} plan`,
-        theme: { color: "#A87A28" },
+        theme: { color: "#1FB579" },
         handler: () => {
           window.location.reload();
         },
@@ -59,7 +59,7 @@ export default function CheckoutButton({
       <button
         onClick={handleCheckout}
         disabled={loading}
-        className="rounded-lg bg-navy-900 px-6 py-3 font-medium text-white transition hover:bg-navy-800 disabled:opacity-50"
+        className="rounded-full bg-ink-900 px-6 py-3 font-semibold text-white transition hover:bg-ink-700 disabled:opacity-50"
       >
         {loading ? "Starting checkout…" : `Activate — ${planTier} plan`}
       </button>

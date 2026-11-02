@@ -55,9 +55,9 @@ export default function AuditProgress({ onDone }: { onDone?: () => void }) {
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-navy-100">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-100">
         <div
-          className="h-full rounded-full bg-gold-500 transition-all duration-700 ease-out"
+          className="h-full rounded-full bg-mint-500 transition-all duration-700 ease-out"
           style={{ width: `${progressPct}%` }}
         />
       </div>
@@ -70,22 +70,22 @@ export default function AuditProgress({ onDone }: { onDone?: () => void }) {
             <li key={step.label} className="flex items-start gap-3">
               <span className="relative mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center">
                 {isDone ? (
-                  <span className="flex h-6 w-6 scale-100 items-center justify-center rounded-full bg-gold-500 text-navy-950 opacity-100 transition-all duration-300">
+                  <span className="flex h-6 w-6 scale-100 items-center justify-center rounded-full bg-mint-500 text-white opacity-100 transition-all duration-300">
                     <svg viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5">
                       <path d="M4 10.5l3.5 3.5L16 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </span>
                 ) : isActive ? (
-                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-navy-100 border-t-gold-500" />
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-ink-100 border-t-mint-500" />
                 ) : (
-                  <span className="h-2 w-2 rounded-full bg-navy-100" />
+                  <span className="h-2 w-2 rounded-full bg-ink-100" />
                 )}
               </span>
               <div className={`transition-opacity duration-300 ${isDone || isActive ? "opacity-100" : "opacity-40"}`}>
-                <p className={`text-sm font-medium ${isDone ? "text-navy-900" : isActive ? "text-navy-900" : "text-navy-400"}`}>
+                <p className={`text-sm font-semibold ${isDone ? "text-ink-900" : isActive ? "text-ink-900" : "text-ink-400"}`}>
                   {step.label}
                 </p>
-                <p className="text-xs text-navy-400">{step.detail}</p>
+                <p className="text-xs text-ink-400">{step.detail}</p>
               </div>
             </li>
           );

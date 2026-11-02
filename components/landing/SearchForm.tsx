@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import TurnstileWidget from "@/components/TurnstileWidget";
 
-const DEMO_BUSINESS_NAME = "Srinivasan Chess Academy";
+const DEMO_BUSINESS_NAME = "Lakshmi Dental Care";
 
 /**
  * Hits the real /api/clinics/search endpoint (Turnstile + rate-limited,
@@ -50,30 +50,31 @@ export default function SearchForm({ variant = "hero" }: { variant?: "hero" | "c
             placeholder="Enter your business name"
             className={
               isHero
-                ? "w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3.5 text-base text-white placeholder:text-white/50 backdrop-blur focus:border-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-400/40"
-                : "w-full rounded-lg border border-navy-100 bg-white px-4 py-3 text-base text-navy-900 placeholder:text-navy-400 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/30"
+                ? "w-full rounded-full border border-ink-200 bg-white px-5 py-3.5 text-base text-ink-900 placeholder:text-ink-400 focus:border-mint-500 focus:outline-none focus:ring-2 focus:ring-mint-500/30"
+                : "w-full rounded-full border border-white/20 bg-white/10 px-5 py-3.5 text-base text-white placeholder:text-white/50 backdrop-blur focus:border-mint-400 focus:outline-none focus:ring-2 focus:ring-mint-400/40"
             }
           />
           <button
             type="submit"
             disabled={loading}
-            className="shrink-0 rounded-lg bg-gold-500 px-6 py-3.5 font-medium text-navy-950 transition hover:bg-gold-400 disabled:opacity-50"
+            className="shrink-0 rounded-full bg-mint-500 px-6 py-3.5 font-semibold text-white transition hover:bg-mint-600 disabled:opacity-50"
           >
             {loading ? "Starting…" : "Run My Growth Audit"}
           </button>
         </div>
 
-        {/* Both variants ship on dark sections (hero, trust banner) — helper text stays light. */}
-        <div className="text-white/70">
+        <div className={isHero ? "text-ink-500" : "text-white/70"}>
           <TurnstileWidget onVerify={setToken} />
         </div>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
       </form>
 
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/60">
+      <div
+        className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-sm ${isHero ? "text-ink-500" : "text-white/60"}`}
+      >
         <span>Can&apos;t find your business? Try adding your city.</span>
-        <span className="text-white/30">·</span>
+        <span className={isHero ? "text-ink-200" : "text-white/30"}>·</span>
         <button
           type="button"
           disabled={loading}
@@ -81,7 +82,9 @@ export default function SearchForm({ variant = "hero" }: { variant?: "hero" | "c
             setQuery(DEMO_BUSINESS_NAME);
             runAudit(DEMO_BUSINESS_NAME);
           }}
-          className="font-medium text-gold-400 underline-offset-2 hover:underline disabled:opacity-50"
+          className={`font-semibold underline-offset-2 hover:underline disabled:opacity-50 ${
+            isHero ? "text-mint-500" : "text-mint-400"
+          }`}
         >
           Or see a live example: {DEMO_BUSINESS_NAME} →
         </button>

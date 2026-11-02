@@ -38,11 +38,16 @@ with mock AI copy).
 
 ## What's curated vs. generated
 
-- Searching **"Srinivasan Chess Academy"** (or using the "see a live
-  example" quick-start link on the homepage) always returns the same
-  curated, realistic business profile and reviews — defined in
-  `lib/mockBusinessData.ts` (`FEATURED_PROFILE` / `FEATURED_REVIEWS`). This
-  is the one to show off in a demo.
+- Searching **"Lakshmi Dental Care"** (or using the "see a live example"
+  quick-start link on the homepage) always returns the same curated,
+  realistic clinic profile and reviews — a dental clinic on Usman Road,
+  T. Nagar, Chennai, defined in `lib/mockBusinessData.ts`
+  (`CLINIC_PROFILE` / `CLINIC_REVIEWS`). This is the one to show off in a
+  demo, since the product itself is a clinic growth tool.
+- Searching **"Srinivasan Chess Academy"** also works and returns a second
+  curated profile (`CHESS_PROFILE` / `CHESS_REVIEWS`), a few streets away
+  in the same T. Nagar neighborhood — kept to show the product reads
+  sensibly outside strictly medical clinics too, but it's not the default.
 - Searching anything else deterministically generates a plausible business
   (same query → same result every time, via a seeded PRNG) so the product
   still feels real for arbitrary input, just not hand-curated.
@@ -74,4 +79,45 @@ npm run dev
 ```
 
 Then open `http://localhost:3000` and click **"Or see a live example:
-Srinivasan Chess Academy"**.
+Lakshmi Dental Care"**.
+
+## Deploying to Vercel
+
+This app is already Vercel-ready — `middleware.ts` recognizes `*.vercel.app`
+hosts out of the box, the build script (`prisma generate && next build`)
+is exactly what Vercel runs by default, and there's no filesystem writes
+anywhere that would break on a serverless runtime.
+
+Vercel doesn't include a database, so you need a hosted Postgres. The
+[Neon](https://neon.tech) free tier is the fastest path (a few minutes,
+no credit card):
+
+1. **Create the database.** Sign up at neon.tech, create a project, and
+   copy its connection string (starts with `postgresql://...`).
+2. **Run migrations against it once, from your own machine** (Vercel does
+   not run migrations automatically on deploy):
+   ```bash
+   DATABASE_URL="<your neon connection string>" npx prisma migrate deploy
+   DATABASE_URL="<your neon connection string>" npm run db:seed
+   ```
+3. **Import the repo into Vercel**: vercel.com → Add New → Project → pick
+   this GitHub repo → select the `claude/growth-audit-demo` branch.
+4. **Set these environment variables** in the Vercel project settings
+   (Settings → Environment Variables) before the first deploy:
+
+   | Variable | Value |
+   |---|---|
+   | `DATABASE_URL` | your Neon connection string |
+   | `NEXTAUTH_SECRET` | output of `openssl rand -base64 32` |
+   | `NEXTAUTH_URL` | `https://<your-project>.vercel.app` |
+   | `APP_BASE_DOMAIN` | `<your-project>.vercel.app` (or a custom domain once you connect one) |
+
+   Leave every API-key variable (`GOOGLE_PLACES_API_KEY`,
+   `OPENAI_API_KEY`, `CLOUDFLARE_TURNSTILE_*`, `RAZORPAY_*`, etc.) **unset**
+   — demo mode activates automatically, exactly like it does locally.
+5. **Deploy.** Vercel builds and serves it; open the deployed URL and the
+   same search → animated audit → report flow works, backed by your Neon
+   database instead of local Postgres.
+
+To go live later, add the real API keys as additional environment
+variables and redeploy — no code changes, per the table above.

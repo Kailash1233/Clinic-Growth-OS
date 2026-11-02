@@ -1,18 +1,15 @@
 import type { ReactNode } from "react";
-import { Fraunces, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import "@/app/globals.css";
 import SessionProvider from "@/components/providers/SessionProvider";
 
-const display = Fraunces({
+// STKBureauSans (Owner.com's own typeface) isn't legally distributable here —
+// Inter is the closest widely-available alternative: a clean geometric sans
+// with the same confident, compact character.
+const display = Inter({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-display",
-});
-
-const body = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
 });
 
 export const metadata = {
@@ -22,8 +19,8 @@ export const metadata = {
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <body className="min-h-screen bg-cream-50 text-navy-900 antialiased">
+    <html lang="en" className={display.variable}>
+      <body className="min-h-screen bg-white text-ink-900 antialiased">
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

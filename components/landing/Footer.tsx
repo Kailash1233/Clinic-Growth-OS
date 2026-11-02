@@ -16,11 +16,11 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
 
 export default function Footer() {
   return (
-    <footer className="bg-navy-950 px-6 py-16 text-white">
+    <footer className="bg-ink-900 px-6 py-16 text-white">
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-10 sm:grid-cols-[2fr_1fr_1fr]">
           <div>
-            <span className="font-serif text-lg font-semibold">Clinic Growth</span>
+            <span className="text-lg font-bold">Clinic Growth</span>
             <p className="mt-3 max-w-xs text-sm text-white/60">
               The growth system built for Indian clinics — score, site, and reputation, in one place.
             </p>
@@ -28,7 +28,7 @@ export default function Footer() {
 
           {COLUMNS.map((col) => (
             <div key={col.title}>
-              <h3 className="text-xs font-medium uppercase tracking-wide text-white/50">{col.title}</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-white/50">{col.title}</h3>
               <ul className="mt-4 space-y-2 text-sm">
                 {col.links.map((link) => (
                   <li key={link.label}>
@@ -46,7 +46,7 @@ export default function Footer() {
           <p className="text-xs text-white/40">© {new Date().getFullYear()} Clinic Growth. All rights reserved.</p>
           <Link
             href="/login"
-            className="rounded-md bg-gold-500 px-5 py-2.5 text-sm font-medium text-navy-950 hover:bg-gold-400"
+            className="rounded-full bg-mint-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-mint-600"
           >
             Find My Clinic
           </Link>

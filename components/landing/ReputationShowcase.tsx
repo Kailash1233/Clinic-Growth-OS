@@ -9,21 +9,21 @@ const CLAIMS = [
 
 export default function ReputationShowcase() {
   return (
-    <section className="bg-navy-900 px-6 py-20">
+    <section className="bg-ink-900 px-6 py-20">
       <div className="mx-auto max-w-5xl">
-        <h2 className="text-center font-serif text-3xl font-semibold text-white sm:text-4xl">
-          Manages your <span className="text-gold-400">reputation</span> like a pro
+        <h2 className="text-center text-3xl font-bold text-white sm:text-4xl">
+          Manages your <span className="text-mint-400">reputation</span> like a pro
         </h2>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {CLAIMS.map((claim) => (
-            <div key={claim} className="rounded-xl border border-white/10 bg-white/5 p-5">
+            <div key={claim} className="rounded-2xl border border-white/10 bg-white/5 p-5">
               <p className="text-sm text-white/80">{claim}</p>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
+        <div className="mt-12 overflow-hidden rounded-2xl border border-white/10 shadow-sm">
           <Image
             src="/screenshots/review-inbox.png"
             alt="Review inbox showing a Google review with an AI-drafted reply"

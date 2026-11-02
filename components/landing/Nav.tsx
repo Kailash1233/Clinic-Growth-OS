@@ -8,7 +8,7 @@ export default function Nav() {
 
   useEffect(() => {
     function onScroll() {
-      setScrolled(window.scrollY > 40);
+      setScrolled(window.scrollY > 24);
     }
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -17,17 +17,17 @@ export default function Nav() {
 
   return (
     <nav
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled ? "bg-navy-950/95 shadow-sm backdrop-blur" : "bg-transparent"
+      className={`fixed inset-x-0 top-0 z-50 border-b transition-colors duration-300 ${
+        scrolled ? "border-ink-100 bg-white/90 backdrop-blur" : "border-transparent bg-transparent"
       }`}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="font-serif text-lg font-semibold text-white">
-          Clinic Growth
+        <Link href="/" className="text-lg font-bold text-ink-900">
+          Clinic<span className="text-mint-500">Growth</span>
         </Link>
         <Link
           href="/login"
-          className="rounded-md border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+          className="rounded-full bg-mint-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-mint-600"
         >
           Login
         </Link>

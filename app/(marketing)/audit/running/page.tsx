@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import AuditProgress from "@/components/AuditProgress";
 
 type Pending = { query: string; token: string };
@@ -51,31 +52,41 @@ export default function AuditRunningPage() {
   const failed = animationDone && fetchOutcome && !fetchOutcome.ok;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-navy-950 px-6 py-16">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(217,174,92,0.12),transparent_55%)]" />
-      </div>
+    <main className="min-h-screen bg-white px-6 py-16">
+      <div className="mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-2 lg:gap-20">
+        <div>
+          <Link href="/" className="text-lg font-bold text-ink-900">
+            Clinic<span className="text-mint-500">Growth</span>
+          </Link>
 
-      <div className="relative w-full max-w-lg">
-        <p className="text-center text-xs font-medium uppercase tracking-wide text-white/50">
-          Running growth audit
-        </p>
-        <h1 className="mt-3 text-center font-serif text-2xl font-semibold text-white sm:text-3xl">
-          {query ? <>Auditing &ldquo;{query}&rdquo;&hellip;</> : "Starting your audit…"}
-        </h1>
-        <p className="mt-2 text-center text-sm text-white/60">
-          This takes a few seconds — we&apos;re pulling real signals together.
-        </p>
+          <p className="mt-10 text-sm font-semibold uppercase tracking-wide text-ink-400">
+            {query ? <>Scanning &ldquo;{query}&rdquo;&hellip;</> : "Starting your audit…"}
+          </p>
+          <h1 className="mt-2 text-3xl font-bold text-ink-900 sm:text-4xl">
+            Building you a free growth report
+          </h1>
+          <p className="mt-4 max-w-sm text-ink-500">
+            Explore a working audit built just for {query ?? "your business"} — pulling your Google
+            presence, site health, and reviews together in real time.
+          </p>
 
-        <div className="mt-10 rounded-2xl bg-white p-8 shadow-2xl">
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-mint-500 px-5 py-2.5 text-sm font-semibold text-white">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-white" />
+            {failed ? "Couldn't finish" : "Building…"}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-ink-100 bg-white p-8">
           {!failed ? (
             <AuditProgress onDone={() => setAnimationDone(true)} />
           ) : (
             <div className="text-center">
-              <p className="font-medium text-navy-900">{fetchOutcome && !fetchOutcome.ok ? fetchOutcome.error : "Something went wrong."}</p>
+              <p className="font-medium text-ink-900">
+                {fetchOutcome && !fetchOutcome.ok ? fetchOutcome.error : "Something went wrong."}
+              </p>
               <a
                 href="/"
-                className="mt-4 inline-block rounded-lg bg-gold-500 px-5 py-2.5 text-sm font-medium text-navy-950 hover:bg-gold-400"
+                className="mt-4 inline-block rounded-full bg-mint-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-mint-600"
               >
                 Try again
               </a>

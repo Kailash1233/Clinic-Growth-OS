@@ -2,15 +2,23 @@ import type { PlaceSearchResult } from "@/lib/places";
 import type { PlaceReview } from "@/lib/places";
 
 /**
- * Demo-mode data: a curated, realistic business profile ("Srinivasan Chess
- * Academy") plus a deterministic generator for any other query, so the
- * search box never dead-ends in a demo. Shaped identically to the real
- * Places API types (PlaceSearchResult / PlaceReview) so nothing downstream
- * — scoring, health checks, the renderer — knows or cares that it's mocked.
+ * Demo-mode data: two curated, realistic business profiles plus a
+ * deterministic generator for any other query, so the search box never
+ * dead-ends in a demo. Shaped identically to the real Places API types
+ * (PlaceSearchResult / PlaceReview) so nothing downstream — scoring, health
+ * checks, the renderer — knows or cares that it's mocked.
+ *
+ * Primary demo: "Lakshmi Dental Care" — an actual clinic, since this product
+ * is Clinic Growth OS. "Srinivasan Chess Academy" (a few streets away in the
+ * same T. Nagar neighborhood) is kept as a secondary curated example to show
+ * the product also works outside strictly medical clinics.
  */
 
-const FEATURED_NAME = "Srinivasan Chess Academy";
-const FEATURED_SLUG = normalize(FEATURED_NAME);
+const CLINIC_NAME = "Lakshmi Dental Care";
+const CLINIC_SLUG = normalize(CLINIC_NAME);
+
+const CHESS_NAME = "Srinivasan Chess Academy";
+const CHESS_SLUG = normalize(CHESS_NAME);
 
 function normalize(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -24,14 +32,75 @@ function hashString(s: string): number {
   return Math.abs(h);
 }
 
-function isFeaturedQuery(query: string): boolean {
+function matchesClinic(query: string): boolean {
   const q = normalize(query);
-  return q.includes("srinivasan") || q.includes("chess academy") || q === FEATURED_SLUG;
+  return q.includes("lakshmi") || q.includes("dental care") || q === CLINIC_SLUG;
 }
 
-const FEATURED_PROFILE: PlaceSearchResult = {
+function matchesChess(query: string): boolean {
+  const q = normalize(query);
+  return q.includes("srinivasan") || q.includes("chess academy") || q === CHESS_SLUG;
+}
+
+const CLINIC_PROFILE: PlaceSearchResult = {
+  placeId: "demo-place-lakshmi-dental-care",
+  name: CLINIC_NAME,
+  address: "56 Usman Road, T. Nagar, Chennai, Tamil Nadu 600017",
+  category: "Dental Clinic",
+  phone: "+914428341209",
+  websiteUri: null,
+  rating: 4.4,
+  userRatingCount: 64,
+  businessStatus: "OPERATIONAL",
+  hours: {
+    weekdayDescriptions: [
+      "Monday: 9:30 AM – 1:30 PM, 5:00 – 9:00 PM",
+      "Tuesday: 9:30 AM – 1:30 PM, 5:00 – 9:00 PM",
+      "Wednesday: 9:30 AM – 1:30 PM, 5:00 – 9:00 PM",
+      "Thursday: 9:30 AM – 1:30 PM, 5:00 – 9:00 PM",
+      "Friday: 9:30 AM – 1:30 PM, 5:00 – 9:00 PM",
+      "Saturday: 9:30 AM – 1:30 PM, 5:00 – 9:00 PM",
+      "Sunday: 10:00 AM – 1:00 PM",
+    ],
+  },
+  photos: [],
+  editorialSummary: null,
+};
+
+const CLINIC_REVIEWS: PlaceReview[] = [
+  {
+    googleReviewId: "demo-review-dental-1",
+    authorName: "Kavitha Sundaram",
+    rating: 5,
+    text: "Dr. Lakshmi is excellent with root canal treatments — very gentle and explains every step. No pain at all during my procedure.",
+    reviewTime: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+  },
+  {
+    googleReviewId: "demo-review-dental-2",
+    authorName: "Suresh Babu",
+    rating: 4,
+    text: "Good clinic, clean and professional. Only issue is there's no way to book online — I had to call three times before someone picked up.",
+    reviewTime: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
+  },
+  {
+    googleReviewId: "demo-review-dental-3",
+    authorName: "Divya Krishnan",
+    rating: 5,
+    text: "Took my kids here for a check-up, the staff were wonderful with them. Highly recommend for family dental care in T. Nagar.",
+    reviewTime: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
+  },
+  {
+    googleReviewId: "demo-review-dental-4",
+    authorName: "Mohammed Irfan",
+    rating: 3,
+    text: "Treatment was fine but I couldn't find their timings online anywhere, ended up showing up during their lunch break.",
+    reviewTime: new Date(Date.now() - 33 * 24 * 60 * 60 * 1000),
+  },
+];
+
+const CHESS_PROFILE: PlaceSearchResult = {
   placeId: "demo-place-srinivasan-chess-academy",
-  name: "Srinivasan Chess Academy",
+  name: CHESS_NAME,
   address: "23 Gandhi Road, T. Nagar, Chennai, Tamil Nadu 600017",
   category: "Chess Instructor",
   phone: "+914412345678",
@@ -54,7 +123,7 @@ const FEATURED_PROFILE: PlaceSearchResult = {
   editorialSummary: null,
 };
 
-const FEATURED_REVIEWS: PlaceReview[] = [
+const CHESS_REVIEWS: PlaceReview[] = [
   {
     googleReviewId: "demo-review-chess-1",
     authorName: "Rajesh Kumar",
@@ -178,18 +247,21 @@ function genericReviews(query: string, profile: PlaceSearchResult): PlaceReview[
 }
 
 export function mockSearchPlaceByText(query: string): PlaceSearchResult[] {
-  if (isFeaturedQuery(query)) return [FEATURED_PROFILE];
+  if (matchesClinic(query)) return [CLINIC_PROFILE];
+  if (matchesChess(query)) return [CHESS_PROFILE];
   return [genericProfile(query)];
 }
 
 export function mockGetPlaceDetails(placeId: string): PlaceSearchResult {
-  if (placeId === FEATURED_PROFILE.placeId) return FEATURED_PROFILE;
+  if (placeId === CLINIC_PROFILE.placeId) return CLINIC_PROFILE;
+  if (placeId === CHESS_PROFILE.placeId) return CHESS_PROFILE;
   return genericProfile(placeId.replace(/^demo-place-/, ""));
 }
 
 export function mockGetPlaceReviews(placeId: string): PlaceReview[] {
-  if (placeId === FEATURED_PROFILE.placeId) return FEATURED_REVIEWS;
+  if (placeId === CLINIC_PROFILE.placeId) return CLINIC_REVIEWS;
+  if (placeId === CHESS_PROFILE.placeId) return CHESS_REVIEWS;
   return genericReviews(placeId, genericProfile(placeId));
 }
 
-export { FEATURED_NAME };
+export { CLINIC_NAME as FEATURED_NAME, CHESS_NAME };

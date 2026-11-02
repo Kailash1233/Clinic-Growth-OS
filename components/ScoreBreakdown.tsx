@@ -12,9 +12,9 @@ const LABELS: Record<string, string> = {
 const ORDER = ["visibility", "siteHealth", "reviews", "conversionReadiness"];
 
 function bandColor(score: number): string {
-  if (score >= 70) return "#2E9E6B"; // calm green, not the brand accent — status only
-  if (score >= 40) return "#D9AE5C"; // gold
-  return "#C76B4A"; // muted terracotta, not alarm-red
+  if (score >= 70) return "#1FB579"; // mint — healthy
+  if (score >= 40) return "#E8A838"; // amber — needs attention
+  return "#E8695A"; // soft red — priority
 }
 
 function useCountUp(target: number, durationMs = 900) {
@@ -55,7 +55,7 @@ function ScoreGauge({ overall }: { overall: number }) {
   return (
     <div className="relative flex h-36 w-36 shrink-0 items-center justify-center">
       <svg viewBox="0 0 120 120" className="h-36 w-36 -rotate-90">
-        <circle cx="60" cy="60" r={r} fill="none" stroke="#EEF2F5" strokeWidth="10" />
+        <circle cx="60" cy="60" r={r} fill="none" stroke="#EEF0F3" strokeWidth="10" />
         <circle
           cx="60"
           cy="60"
@@ -70,8 +70,8 @@ function ScoreGauge({ overall }: { overall: number }) {
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="font-serif text-4xl font-semibold text-navy-900">{displayed}</span>
-        <span className="text-xs text-navy-400">out of 100</span>
+        <span className="text-4xl font-bold text-ink-900">{displayed}</span>
+        <span className="text-xs text-ink-400">out of 100</span>
       </div>
     </div>
   );
@@ -93,18 +93,18 @@ export default function ScoreBreakdown({
   const entries = ORDER.filter((k) => k in subScores).map((k) => [k, subScores[k]] as const);
 
   return (
-    <div className="rounded-2xl border border-navy-100 bg-white p-6 sm:p-8">
+    <div className="rounded-2xl border border-ink-100 bg-white p-6 sm:p-8">
       <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
         <ScoreGauge overall={overall} />
 
         <div className="w-full flex-1 space-y-4">
           {entries.map(([key, value], i) => (
             <div key={key}>
-              <div className="flex justify-between text-sm text-navy-700">
+              <div className="flex justify-between text-sm text-ink-700">
                 <span>{LABELS[key] ?? key}</span>
-                <span className="font-medium">{value}</span>
+                <span className="font-semibold">{value}</span>
               </div>
-              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-navy-50">
+              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-ink-100">
                 <div
                   className="h-2 rounded-full"
                   style={{

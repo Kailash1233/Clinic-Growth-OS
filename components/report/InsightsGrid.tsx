@@ -46,9 +46,9 @@ const ICONS: Record<Insight["icon"], React.ReactNode> = {
 };
 
 const IMPACT_STYLE: Record<Insight["impact"], string> = {
-  High: "bg-[#C76B4A]/10 text-[#A6502E]",
-  Medium: "bg-gold-500/15 text-gold-600",
-  Low: "bg-navy-100 text-navy-400",
+  High: "bg-ink-900 text-white",
+  Medium: "bg-cream-100 text-ink-700",
+  Low: "bg-ink-100 text-ink-400",
 };
 
 export default function InsightsGrid({ insights }: { insights: Insight[] }) {
@@ -57,28 +57,30 @@ export default function InsightsGrid({ insights }: { insights: Insight[] }) {
       {insights.map((insight, i) => (
         <div
           key={insight.title}
-          className="animate-fade-in-up rounded-xl border border-navy-100 bg-white p-5"
+          className="animate-fade-in-up rounded-2xl border border-ink-100 bg-white p-5"
           style={{ animationDelay: `${i * 80}ms` }}
         >
           <div className="flex items-start justify-between gap-3">
             <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                insight.kind === "strength" ? "bg-[#2E9E6B]/10 text-[#227A53]" : "bg-navy-50 text-navy-700"
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                insight.kind === "strength" ? "bg-mint-100 text-mint-500" : "bg-ink-100 text-ink-700"
               }`}
             >
               {ICONS[insight.icon]}
             </span>
             {insight.kind === "opportunity" && (
-              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${IMPACT_STYLE[insight.impact]}`}>
+              <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${IMPACT_STYLE[insight.impact]}`}>
                 {insight.impact} impact
               </span>
             )}
             {insight.kind === "strength" && (
-              <span className="rounded-full bg-[#2E9E6B]/10 px-2.5 py-1 text-xs font-medium text-[#227A53]">Strength</span>
+              <span className="rounded-full bg-mint-100 px-2.5 py-1 text-xs font-semibold text-mint-500">
+                Strength
+              </span>
             )}
           </div>
-          <h3 className="mt-3 font-medium text-navy-900">{insight.title}</h3>
-          <p className="mt-1 text-sm text-navy-400">{insight.description}</p>
+          <h3 className="mt-3 font-bold text-ink-900">{insight.title}</h3>
+          <p className="mt-1 text-sm text-ink-500">{insight.description}</p>
         </div>
       ))}
     </div>
