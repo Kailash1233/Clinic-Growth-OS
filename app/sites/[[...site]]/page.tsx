@@ -1,39 +1,96 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
+import type { BlogPost } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { resolveClinicByHost } from "@/lib/resolveSiteByHost";
+import { siteBaseUrl } from "@/lib/siteUrl";
 import ContactForm from "@/components/site/ContactForm";
 import { CallButton, WhatsAppButton } from "@/components/site/LeadButtons";
+import { BlogArticle, BlogIndex, jsonLdScript } from "@/components/site/BlogViews";
 
-export async function generateMetadata(): Promise<Metadata> {
+type Params = { params: { site?: string[] } };
+
+type Route = { kind: "home" } | { kind: "blog-index" } | { kind: "blog-post"; slug: string };
+
+function parseRoute(segments: string[] | undefined): Route | null {
+  const parts = segments ?? [];
+  if (parts.length === 0) return { kind: "home" };
+  if (parts[0] !== "blog") return null;
+  if (parts.length === 1) return { kind: "blog-index" };
+  if (parts.length === 2) return { kind: "blog-post", slug: parts[1] };
+  return null;
+}
+
+/** Only approved (published) posts are ever readable on the public site. */
+function publishedPosts(clinicId: string): Promise<BlogPost[]> {
+  return prisma.blogPost.findMany({
+    where: { clinicId, status: "published" },
+    orderBy: { publishedAt: "desc" },
+  });
+}
+
+function publishedPost(clinicId: string, slug: string): Promise<BlogPost | null> {
+  return prisma.blogPost.findFirst({ where: { clinicId, slug, status: "published" } });
+}
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const site = await resolveClinicByHost();
-  const content = site?.clinic?.siteContent;
-  const seoMeta = content?.seoMeta as { title?: string; description?: string } | undefined;
+  const route = parseRoute(params.site);
+  if (!site || !route) return {};
+  const clinic = site.clinic;
+  const base = siteBaseUrl(site);
 
+  if (route.kind === "blog-index") {
+    return { title: `Blog | ${clinic.name}`, alternates: base ? { canonical: `${base}/blog` } : undefined };
+  }
+  if (route.kind === "blog-post") {
+    const post = await publishedPost(clinic.id, route.slug);
+    if (!post) return {};
+    return {
+      title: post.title,
+      description: post.metaDescription,
+      alternates: base ? { canonical: `${base}/blog/${post.slug}` } : undefined,
+      openGraph: { title: post.title, description: post.metaDescription, type: "article" },
+    };
+  }
+
+  const seoMeta = clinic.siteContent?.seoMeta as { title?: string; description?: string } | undefined;
   return {
-    title: seoMeta?.title ?? site?.clinic?.name ?? "Clinic",
+    title: seoMeta?.title ?? clinic.name ?? "Clinic",
     description: seoMeta?.description ?? undefined,
   };
 }
 
-export default async function ClinicSitePage() {
+export default async function ClinicSitePage({ params }: Params) {
   const site = await resolveClinicByHost();
-  if (!site) notFound();
+  const route = parseRoute(params.site);
+  if (!site || !route) notFound();
 
   const clinic = site.clinic;
+
+  if (route.kind === "blog-index") {
+    return <BlogIndex clinicName={clinic.name} posts={await publishedPosts(clinic.id)} />;
+  }
+  if (route.kind === "blog-post") {
+    const post = await publishedPost(clinic.id, route.slug);
+    if (!post) notFound();
+    const base = siteBaseUrl(site);
+    return <BlogArticle clinicName={clinic.name} post={post} canonicalUrl={base ? `${base}/blog/${post.slug}` : null} />;
+  }
+
   const content = clinic.siteContent;
   if (!content) notFound();
 
   const photos = Array.isArray(clinic.photos) ? (clinic.photos as string[]) : [];
   const services = Array.isArray(content.services) ? (content.services as string[]) : [];
   const hours = clinic.hours as { weekdayDescriptions?: string[] } | null;
+  const latestPosts = (await publishedPosts(clinic.id)).slice(0, 3);
 
   return (
     <main>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(content.jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(content.jsonLd) }} />
 
       <section className="border-b border-slate-100 bg-brand-50 px-6 py-16">
         <div className="mx-auto max-w-3xl text-center">
@@ -87,6 +144,27 @@ export default async function ClinicSitePage() {
           <ul className="mt-4 space-y-1 text-slate-700">
             {hours.weekdayDescriptions.map((d, i) => (
               <li key={i}>{d}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {latestPosts.length > 0 && (
+        <section className="mx-auto max-w-3xl px-6 py-12">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-xl font-semibold text-slate-900">Latest articles</h2>
+            <Link href="/blog" className="text-sm text-brand-700 hover:underline">
+              View all
+            </Link>
+          </div>
+          <ul className="mt-4 space-y-3">
+            {latestPosts.map((p) => (
+              <li key={p.id}>
+                <Link href={`/blog/${p.slug}`} className="font-medium text-slate-900 hover:text-brand-700">
+                  {p.title}
+                </Link>
+                <p className="text-sm text-slate-600">{p.metaDescription}</p>
+              </li>
             ))}
           </ul>
         </section>

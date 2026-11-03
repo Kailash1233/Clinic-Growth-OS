@@ -10,7 +10,11 @@ export default function SiteSettingsForm(props: {
   gscVerificationValue: string | null;
   customHeaderScripts: string | null;
   customBodyScripts: string | null;
+  blogAutoGenerate: boolean;
+  photoRemindersEnabled: boolean;
 }) {
+  const [blogAutoGenerate, setBlogAutoGenerate] = useState(props.blogAutoGenerate);
+  const [photoRemindersEnabled, setPhotoRemindersEnabled] = useState(props.photoRemindersEnabled);
   const [gaMeasurementId, setGaMeasurementId] = useState(props.gaMeasurementId ?? "");
   const [gscVerificationMethod, setGscVerificationMethod] = useState<GscMethod>(props.gscVerificationMethod);
   const [gscVerificationValue, setGscVerificationValue] = useState(props.gscVerificationValue ?? "");
@@ -35,6 +39,8 @@ export default function SiteSettingsForm(props: {
           gscVerificationValue: gscVerificationValue || null,
           customHeaderScripts: customHeaderScripts || null,
           customBodyScripts: customBodyScripts || null,
+          blogAutoGenerate,
+          photoRemindersEnabled,
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Failed to save");
@@ -48,6 +54,34 @@ export default function SiteSettingsForm(props: {
 
   return (
     <form onSubmit={handleSave} className="space-y-6">
+      <fieldset className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+        <legend className="px-1 text-sm font-medium text-slate-700">Automation</legend>
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={blogAutoGenerate}
+            onChange={(e) => setBlogAutoGenerate(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="font-medium text-slate-800">Draft a new SEO blog post every week</span>
+            <span className="block text-slate-500">You still approve every post before it goes live.</span>
+          </span>
+        </label>
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={photoRemindersEnabled}
+            onChange={(e) => setPhotoRemindersEnabled(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="font-medium text-slate-800">Weekly reminder to add photos to Google</span>
+            <span className="block text-slate-500">An email nudge to upload new photos to your Google Business Profile.</span>
+          </span>
+        </label>
+      </fieldset>
+
       <div>
         <label className="block text-sm font-medium text-slate-700">GA4 measurement ID</label>
         <input

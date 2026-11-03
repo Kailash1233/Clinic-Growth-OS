@@ -1,4 +1,4 @@
-import type { SiteGenerationInput, GeneratedSiteContent } from "@/lib/openai";
+import type { SiteGenerationInput, GeneratedSiteContent, BlogGenerationInput, GeneratedBlogPost } from "@/lib/openai";
 
 /**
  * Demo-mode stand-ins for the OpenAI calls, written in the same voice and
@@ -88,4 +88,69 @@ export function mockGenerateSentimentSummary(reviews: { rating: number; text: st
   }
   if (avg >= 3.5) return "Generally positive with a few mixed reviews — no single recurring complaint stands out.";
   return "Mixed sentiment recently — worth a closer look at the lower-rated reviews.";
+}
+
+const SMALL_WORDS = new Set(["in", "near", "of", "for", "and", "the", "a", "an", "to", "at"]);
+
+function titleCase(s: string): string {
+  return s
+    .split(" ")
+    .map((w, i) => (i > 0 && SMALL_WORDS.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(" ");
+}
+
+/** Keywords are stored lowercase; restore the real casing of the area/city inside them for display. */
+function displayKeyword(keyword: string, area: string | null, city: string | null): string {
+  let out = keyword;
+  for (const place of [area, city]) {
+    if (place) out = out.replace(new RegExp(place.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), place);
+  }
+  return out;
+}
+
+/** Answers kept deliberately general — same rules as the real blog prompt: no prices, no outcomes, no advice. */
+function mockFaqAnswer(question: string, clinicName: string): string {
+  const q = question.toLowerCase();
+  if (q.includes("cost") || q.includes("price") || q.includes("charge")) {
+    return `Cost depends on what each person needs, which can only be worked out after an assessment. Factors include the type of treatment, how many visits it takes, and any materials involved. ${clinicName} can explain the options and costs after a consultation.`;
+  }
+  if (q.includes("how long") || q.includes("how many")) {
+    return "It varies from person to person. A professional can give you a realistic idea of the time involved once they have assessed your situation.";
+  }
+  if (q.includes("choose") || q.includes("which") || q.includes("good")) {
+    return "Look at how easy the clinic is to reach, its opening hours, recent patient reviews, and whether the team explains options clearly before starting any treatment.";
+  }
+  return "The honest answer depends on your individual situation. It's best discussed with a qualified professional who can assess you in person and explain your options.";
+}
+
+export function mockGenerateBlogPost(input: BlogGenerationInput): GeneratedBlogPost {
+  const place = input.area ?? input.city ?? "your area";
+  const phrase = displayKeyword(input.targetKeyword, input.area, input.city);
+  const keyword = titleCase(phrase);
+  const title = `${keyword}: A Simple Guide for Patients`.slice(0, 65);
+  return {
+    title,
+    slug: input.targetKeyword.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-guide",
+    meta_description: `Looking for ${phrase}? What to know before you visit, common questions answered, and how to choose a clinic in ${place}.`.slice(0, 155),
+    intro: `If you are searching for ${phrase}, you probably have a few practical questions before booking a visit. This guide covers what to look for, what to expect, and answers to the questions people in ${place} most often ask.\n\nEvery person's situation is different, so treat this as general information and speak to a qualified professional about your own needs.`,
+    sections: [
+      {
+        heading: `What to know about ${phrase}`,
+        body: `Start with the basics: a convenient location, opening hours that fit your routine, and a team that explains things clearly. Recent reviews from other patients in ${place} can give you a feel for the experience.\n\nA good clinic will take time to understand your concerns before suggesting anything.`,
+      },
+      {
+        heading: "What to expect at your first visit",
+        body: "Your first visit usually starts with a conversation about your concerns and history, followed by an assessment. You should leave understanding your options, without pressure to decide on the spot.",
+      },
+      {
+        heading: "Questions worth asking",
+        body: "Ask what the options are, how many visits may be needed, what aftercare involves, and how costs are worked out. Clear answers to these questions are a good sign.",
+      },
+      {
+        heading: `Booking an appointment in ${place}`,
+        body: `If you are in or near ${place}, ${input.clinicName} is happy to talk through your questions. You can call or message the clinic to book a consultation at a time that suits you.`,
+      },
+    ],
+    faq: input.questions.map((question) => ({ question, answer: mockFaqAnswer(question, input.clinicName) })),
+  };
 }

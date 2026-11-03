@@ -39,5 +39,6 @@ export const config = {
   // (favicon.ico, /screenshots/*.png, robots.txt, etc.) — static assets must
   // never be rewritten into the per-host clinic-site renderer, and Next's
   // own image optimizer fetches these internally on every request.
-  matcher: ["/((?!_next|api|.*\\..*).*)"],
+  // /sitemap.xml is the one exception: each clinic site serves its own.
+  matcher: ["/((?!_next|api|.*\\..*).*)", "/sitemap.xml"],
 };

@@ -121,3 +121,55 @@ no credit card):
 
 To go live later, add the real API keys as additional environment
 variables and redeploy — no code changes, per the table above.
+
+## SEO blog posts and weekly Google photo reminders
+
+### What it does
+
+- **Weekly SEO blog drafts.** For each clinic with an active subscription,
+  the app builds location-based keywords from the clinic's own category,
+  services and address (e.g. "dental clinic in T. Nagar", "root canal
+  treatment cost in Chennai"). It then pulls the questions people actually
+  type into Google from Google's public autocomplete (free, no API key),
+  and has OpenAI draft a post that targets one unused keyword and answers
+  those questions. Drafts follow the same rules as the site copy: no
+  medical advice, no prices, no outcome claims, no invented facts.
+- **Owner approval is mandatory.** Every draft is saved as
+  `pending_approval` and the owner gets an email. They review it under
+  **Dashboard → Blog**, where they can edit, **Approve & publish**, or
+  **Reject** it. Public pages only ever read `published` posts, so nothing
+  reaches `/blog` or `sitemap.xml` without approval. A published post can be
+  unpublished at any time.
+- **Public blog on each clinic site:** `/blog`, `/blog/<slug>` (with
+  `BlogPosting` + `FAQPage` structured data), a "Latest articles" block on
+  the homepage, and a per-clinic `/sitemap.xml`.
+- **Weekly photo reminder.** Each owner gets one email a week reminding
+  them to upload new photos to their Google Business Profile, with photo
+  ideas and how-to steps. Owners with only a phone number get an SMS instead,
+  if you configure an MSG91 template.
+- Owners can turn either automation off in **Dashboard → Settings**.
+
+If Google's autocomplete can't be reached, drafts fall back to generic
+question templates. Those drafts get a **"Generic questions"** badge
+instead of **"Based on real Google searches"**, so the owner always knows
+which kind they're approving.
+
+### Setup
+
+1. Run the new migration: `npx prisma migrate deploy`.
+2. Set `CRON_SECRET` (any long random string). For real emails, also set
+   `RESEND_API_KEY` and `EMAIL_FROM`. For real AI writing, set
+   `OPENAI_API_KEY`.
+3. Schedule the two jobs:
+   - **Vercel:** nothing to do. `vercel.json` already registers both jobs
+     to run daily, and Vercel sends the `CRON_SECRET` header automatically.
+   - **VPS:** add to crontab (times are UTC, i.e. 9:00 and 10:00 IST):
+     ```
+     30 3 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://yourbrand.in/api/cron/blog-drafts
+     30 4 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://yourbrand.in/api/cron/photo-reminders
+     ```
+
+The jobs run daily but are rate-limited inside: at most one new draft per
+clinic per 7 days (skipped while a draft is still awaiting review), and one
+photo reminder per owner per week. Re-running a job never double-sends.
+Every send attempt, including failures, is recorded in `notification_log`.

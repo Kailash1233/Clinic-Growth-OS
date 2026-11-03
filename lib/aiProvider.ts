@@ -9,13 +9,22 @@ import {
   generateSiteContent as realGenerateSiteContent,
   generateReviewReply as realGenerateReviewReply,
   generateSentimentSummary as realGenerateSentimentSummary,
+  generateBlogPost as realGenerateBlogPost,
   PROMPT_VERSION,
+  BLOG_PROMPT_VERSION,
   type SiteGenerationInput,
   type GeneratedSiteContent,
+  type BlogGenerationInput,
+  type GeneratedBlogPost,
 } from "@/lib/openai";
-import { mockGenerateSiteContent, mockGenerateReviewReply, mockGenerateSentimentSummary } from "@/lib/mockAiContent";
+import {
+  mockGenerateSiteContent,
+  mockGenerateReviewReply,
+  mockGenerateSentimentSummary,
+  mockGenerateBlogPost,
+} from "@/lib/mockAiContent";
 
-export type { SiteGenerationInput, GeneratedSiteContent };
+export type { SiteGenerationInput, GeneratedSiteContent, BlogGenerationInput, GeneratedBlogPost };
 
 export async function generateSiteContent(
   input: SiteGenerationInput
@@ -46,4 +55,14 @@ export async function generateSentimentSummary(reviews: { rating: number; text: 
     return mockGenerateSentimentSummary(reviews);
   }
   return realGenerateSentimentSummary(reviews);
+}
+
+export async function generateBlogPost(
+  input: BlogGenerationInput
+): Promise<{ post: GeneratedBlogPost; promptVersion: string }> {
+  if (demoFlags.openai) {
+    await demoDelay(700, 1200);
+    return { post: mockGenerateBlogPost(input), promptVersion: `${BLOG_PROMPT_VERSION}-demo` };
+  }
+  return { post: await realGenerateBlogPost(input), promptVersion: BLOG_PROMPT_VERSION };
 }
