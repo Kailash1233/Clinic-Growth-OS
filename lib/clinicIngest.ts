@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { generateClinicSlug } from "@/lib/slug";
-import { getPlaceDetails, placePhotoUrl, searchPlaceByText, type PlaceSearchResult } from "@/lib/places";
+import { placePhotoUrl } from "@/lib/places";
+import { searchPlaceByText, type PlaceSearchResult } from "@/lib/placesProvider";
 import { getPageSpeedScores } from "@/lib/pagespeed";
 import { checkRobotsAndIndexability, checkConversionReadiness } from "@/lib/siteHealth";
 import { computeOverallScore } from "@/lib/scoring";

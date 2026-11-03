@@ -221,3 +221,113 @@ export async function generateSentimentSummary(
 
   return (JSON.parse(raw) as { summary: string }).summary;
 }
+
+// --- SEO blog posts ------------------------------------------------------
+
+export const BLOG_PROMPT_VERSION = "blog-v1";
+
+const BLOG_SYSTEM_PROMPT = `You write SEO blog posts for a local healthcare/wellness clinic's website. Each post targets one local search keyword and answers real questions people type into Google. The clinic owner reviews and approves every post before it is published, but write as if it will be published as-is.
+
+Hard rules — never break these:
+1. Educational and general only. Never give medical advice, a diagnosis, or a treatment recommendation for an individual. Where relevant, say a qualified professional should assess each person's situation.
+2. Never state or imply treatment outcomes, success/cure rates, or that a procedure is painless, risk-free, or guaranteed.
+3. Never invent facts about the clinic: no fabricated prices, years of experience, staff names, qualifications, awards, equipment, or patient stories. Use only the clinic data provided. If asked about cost, explain what typically affects cost and say exact pricing comes from the clinic — never quote a number.
+4. Never invent statistics, studies, or sources.
+5. Banned phrases: "best", "#1", "leading", "top-rated", "guaranteed", "painless", "miracle".
+6. Use the target keyword naturally in the title, the intro, and at least one section heading. Use supporting keywords only where they read naturally — no keyword stuffing.
+7. Mention the clinic by name at most three times, naturally, mainly near the end. This is a helpful article first, not an advert.
+8. Answer each provided search question in the FAQ, briefly and plainly (2-4 sentences each).
+9. Write for readers in India in clear, simple English. Warm, professional tone.
+10. Output must be valid JSON matching the schema exactly. No text outside the JSON object.`;
+
+export type BlogGenerationInput = {
+  clinicName: string;
+  category: string;
+  area: string | null;
+  city: string | null;
+  services: string[];
+  targetKeyword: string;
+  supportingKeywords: string[];
+  questions: string[];
+  existingTitles: string[];
+};
+
+export type GeneratedBlogPost = {
+  title: string;
+  slug: string;
+  meta_description: string;
+  intro: string;
+  sections: { heading: string; body: string }[];
+  faq: { question: string; answer: string }[];
+};
+
+const BLOG_POST_SCHEMA = {
+  name: "seo_blog_post",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      title: { type: "string", description: "Under 65 characters, includes the target keyword." },
+      slug: { type: "string", description: "lowercase-words-joined-by-hyphens, under 60 characters." },
+      meta_description: { type: "string", description: "Under 155 characters." },
+      intro: { type: "string" },
+      sections: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: { heading: { type: "string" }, body: { type: "string" } },
+          required: ["heading", "body"],
+        },
+      },
+      faq: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: { question: { type: "string" }, answer: { type: "string" } },
+          required: ["question", "answer"],
+        },
+      },
+    },
+    required: ["title", "slug", "meta_description", "intro", "sections", "faq"],
+  },
+} as const;
+
+export function buildBlogUserPrompt(input: BlogGenerationInput): string {
+  const location = [input.area, input.city].filter(Boolean).join(", ") || "not specified";
+  return `Write one SEO blog post for this clinic.
+
+Clinic name: ${input.clinicName}
+Category: ${input.category}
+Location: ${location}
+Services the clinic lists: ${input.services.length ? input.services.join("; ") : "none listed — keep service mentions generic"}
+
+Target keyword: ${input.targetKeyword}
+Supporting keywords: ${input.supportingKeywords.join("; ") || "none"}
+Real Google search questions to answer in the FAQ:
+${input.questions.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+
+Existing post titles on this blog (do not repeat these topics): ${input.existingTitles.join("; ") || "none yet"}
+
+Structure: an intro of 2 short paragraphs, then 4-6 sections each with a heading and 1-3 paragraphs (separate paragraphs with a blank line), then the FAQ answering every question above. About 800-1100 words total. End the last section with a gentle, non-pushy line that readers in ${input.area ?? input.city ?? "the area"} can contact ${input.clinicName} to book a consultation.`;
+}
+
+export async function generateBlogPost(input: BlogGenerationInput): Promise<GeneratedBlogPost> {
+  const openai = getClient();
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: BLOG_SYSTEM_PROMPT },
+      { role: "user", content: buildBlogUserPrompt(input) },
+    ],
+    response_format: { type: "json_schema", json_schema: BLOG_POST_SCHEMA },
+  });
+
+  const raw = completion.choices[0]?.message?.content;
+  if (!raw) throw new Error("OpenAI returned no content");
+
+  return JSON.parse(raw) as GeneratedBlogPost;
+}

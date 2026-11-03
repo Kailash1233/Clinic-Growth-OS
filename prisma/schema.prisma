@@ -49,6 +49,22 @@ enum UserRole {
   admin
 }
 
+enum BlogPostStatus {
+  pending_approval
+  published
+  rejected
+}
+
+enum NotificationType {
+  blog_draft_ready
+  photo_reminder
+}
+
+enum NotificationChannel {
+  email
+  sms
+}
+
 model Clinic {
   id            String   @id @default(cuid())
   slug          String   @unique
@@ -74,6 +90,8 @@ model Clinic {
   generationUsage  GenerationUsage[]
   reviews          Review[]
   patients         Patient[]
+  blogPosts        BlogPost[]
+  notifications    NotificationLog[]
 
   @@map("clinics")
 }
@@ -134,6 +152,8 @@ model SiteSettings {
   customHeaderScripts   String?                 @map("custom_header_scripts")
   customBodyScripts     String?                 @map("custom_body_scripts")
   status                SiteStatus              @default(draft)
+  blogAutoGenerate      Boolean                 @default(true) @map("blog_auto_generate")
+  photoRemindersEnabled Boolean                 @default(true) @map("photo_reminders_enabled")
 
   @@map("site_settings")
 }
@@ -248,6 +268,56 @@ model Patient {
 
   @@index([clinicId])
   @@map("patients")
+}
+
+// SEO blog posts drafted by AI from location-based keywords and real Google
+// search questions. Nothing reaches the public site until the owner approves:
+// the renderer only ever reads status = published.
+model BlogPost {
+  id              String         @id @default(cuid())
+  clinicId        String         @map("clinic_id")
+  clinic          Clinic         @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  slug            String
+  title           String
+  metaDescription String         @map("meta_description")
+  targetKeyword   String         @map("target_keyword")
+  keywords        Json           // supporting keywords used
+  sourceQuestions Json           @map("source_questions") // search questions the post answers
+  keywordSource   String         @map("keyword_source") // "google_autocomplete" | "template"
+  intro           String
+  sections        Json           // [{ heading, body }]
+  faq             Json           // [{ question, answer }]
+  status          BlogPostStatus @default(pending_approval)
+  promptVersion   String         @map("prompt_version")
+  rejectionNote   String?        @map("rejection_note")
+  generatedAt     DateTime       @default(now()) @map("generated_at")
+  reviewedAt      DateTime?      @map("reviewed_at")
+  reviewedBy      String?        @map("reviewed_by")
+  publishedAt     DateTime?      @map("published_at")
+
+  @@unique([clinicId, slug])
+  @@index([clinicId, status])
+  @@map("blog_posts")
+}
+
+// One row per notification actually attempted, keyed by period so a weekly
+// job that runs twice (retry, manual trigger) never double-sends.
+model NotificationLog {
+  id        String              @id @default(cuid())
+  clinicId  String              @map("clinic_id")
+  clinic    Clinic              @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  userId    String?             @map("user_id")
+  type      NotificationType
+  channel   NotificationChannel
+  recipient String
+  periodKey String              @map("period_key") // e.g. "2026-W45", or a blog post id
+  delivered Boolean             @default(false)
+  error     String?
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  @@unique([clinicId, recipient, type, periodKey])
+  @@index([clinicId])
+  @@map("notification_log")
 }
 
 model GenerationUsage {

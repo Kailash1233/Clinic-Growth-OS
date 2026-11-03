@@ -31,27 +31,27 @@ const FAQS: [string, string][] = [
 
 export default function FAQ() {
   return (
-    <section className="bg-cream-50 px-6 py-20">
+    <section className="bg-white px-6 py-20">
       <div className="mx-auto grid max-w-5xl gap-10 sm:grid-cols-[1fr_2fr]">
         <div>
-          <h2 className="font-serif text-3xl font-semibold text-navy-900">Questions, answered.</h2>
-          <p className="mt-4 text-sm text-navy-400">
+          <h2 className="text-3xl font-bold text-ink-900">Questions, answered.</h2>
+          <p className="mt-4 text-sm text-ink-500">
             Still have questions?{" "}
-            <a href="mailto:hello@yourbrand.in" className="text-gold-600 underline">
+            <a href="mailto:hello@yourbrand.in" className="text-mint-500 underline">
               Contact us
             </a>
             .
           </p>
         </div>
 
-        <div className="divide-y divide-navy-100 rounded-2xl border border-navy-100 bg-white">
+        <div className="divide-y divide-ink-100 rounded-2xl border border-ink-100 bg-white">
           {FAQS.map(([question, answer]) => (
             <details key={question} className="group px-6 py-4">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-navy-900">
+              <summary className="flex cursor-pointer list-none items-center justify-between font-semibold text-ink-900">
                 {question}
-                <span className="ml-4 text-navy-300 transition group-open:rotate-45">+</span>
+                <span className="ml-4 text-ink-300 transition group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 text-sm text-navy-400">{answer}</p>
+              <p className="mt-3 text-sm text-ink-500">{answer}</p>
             </details>
           ))}
         </div>

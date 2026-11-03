@@ -10,7 +10,7 @@ export default function NavAuthStatus() {
 
   if (!session) {
     return (
-      <Link href="/login" className="text-sm font-medium text-brand-700 hover:underline">
+      <Link href="/login" className="text-sm font-semibold text-mint-500 hover:underline">
         Sign in
       </Link>
     );
@@ -18,15 +18,15 @@ export default function NavAuthStatus() {
 
   return (
     <div className="flex items-center gap-4 text-sm">
-      <Link href="/dashboard" className="font-medium text-brand-700 hover:underline">
+      <Link href="/dashboard" className="font-semibold text-mint-500 hover:underline">
         Dashboard
       </Link>
       {session.user.role === "admin" && (
-        <Link href="/admin" className="font-medium text-brand-700 hover:underline">
+        <Link href="/admin" className="font-semibold text-mint-500 hover:underline">
           Admin
         </Link>
       )}
-      <button onClick={() => signOut({ callbackUrl: "/" })} className="text-slate-500 hover:text-slate-700">
+      <button onClick={() => signOut({ callbackUrl: "/" })} className="text-ink-400 hover:text-ink-700">
         Sign out
       </button>
     </div>

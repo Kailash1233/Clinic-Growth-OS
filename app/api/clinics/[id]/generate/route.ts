@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { generateSiteContent } from "@/lib/openai";
+import { generateSiteContent } from "@/lib/aiProvider";
 import { generateSubdomainSlug } from "@/lib/slug";
 import { extractCity, formatOpeningHours } from "@/lib/clinicIngest";
 

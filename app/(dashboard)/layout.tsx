@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import "@/app/globals.css";
+import { displayFont } from "@/lib/fonts";
 import SessionProvider from "@/components/providers/SessionProvider";
 import { getServerAuthSession } from "@/lib/auth";
 import SignOutLink from "@/components/SignOutLink";
@@ -11,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (!session?.user) redirect("/login?next=/dashboard");
 
   return (
-    <html lang="en">
+    <html lang="en" className={displayFont.variable}>
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
         <SessionProvider>
           <div className="flex min-h-screen">
@@ -31,6 +32,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 </Link>
                 <Link href="/dashboard/reviews" className="block rounded-md px-2 py-2 hover:bg-slate-100">
                   Reviews
+                </Link>
+                <Link href="/dashboard/blog" className="block rounded-md px-2 py-2 hover:bg-slate-100">
+                  Blog
                 </Link>
                 <Link href="/dashboard/domain" className="block rounded-md px-2 py-2 hover:bg-slate-100">
                   Domain

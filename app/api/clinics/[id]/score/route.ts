@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { runHealthCheckAndScore } from "@/lib/clinicIngest";
-import { getPlaceDetails } from "@/lib/places";
+import { getPlaceDetails } from "@/lib/placesProvider";
 
 /** Latest score for a clinic. Public — the score is the hook, per requirements §5 step 2. */
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
