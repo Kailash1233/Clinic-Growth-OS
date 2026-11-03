@@ -74,6 +74,7 @@ async function fetchSuggestions(query: string): Promise<string[]> {
   const url = `${SUGGEST_URL}?client=firefox&hl=en&gl=in&q=${encodeURIComponent(query)}`;
   try {
     const res = await fetch(url, {
+      cache: "no-store",
       signal: AbortSignal.timeout(4000),
       headers: { "User-Agent": "Mozilla/5.0 (compatible; ClinicGrowthBot/1.0)" },
     });

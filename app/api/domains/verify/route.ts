@@ -1,3 +1,4 @@
+import { appBaseDomain } from "@/lib/siteUrl";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import dns from "dns/promises";
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid domain" }, { status: 400 });
 
   const domain = parsed.data.domain.toLowerCase().trim();
-  const cnameTarget = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
+  const cnameTarget = appBaseDomain();
 
   await prisma.siteSettings.update({
     where: { clinicId: user.clinicId },
@@ -45,7 +46,7 @@ export async function GET() {
     return NextResponse.json({ error: "No domain connected yet" }, { status: 400 });
   }
 
-  const cnameTarget = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
+  const cnameTarget = appBaseDomain();
 
   let verified = false;
   try {

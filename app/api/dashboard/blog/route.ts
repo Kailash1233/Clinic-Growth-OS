@@ -13,7 +13,7 @@ export async function POST() {
   }
   if (!user.clinicId) return NextResponse.json({ error: "No clinic on this account" }, { status: 400 });
 
-  // Blog posts are an ongoing paid-plan feature (each draft is an OpenAI call).
+  // Blog posts are an ongoing paid-plan feature (each draft is a Groq AI call).
   if (!(await hasActiveSubscription(user.clinicId))) {
     return NextResponse.json({ error: "Blog posts are included with an active subscription." }, { status: 402 });
   }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { generateSiteContent } from "@/lib/aiProvider";
+import { generateSiteContent } from "@/lib/ai";
 import { extractCity, formatOpeningHours } from "@/lib/clinicIngest";
 
 /** Requirements §11: manually trigger regeneration for any clinic (bypasses the subscriber gate — admin action). */
@@ -29,7 +29,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   });
 
   await prisma.generationUsage.create({
-    data: { api: "openai", userId: admin.id, clinicId: clinic.id, costEstimate: 0.01 },
+    data: { api: "groq", userId: admin.id, clinicId: clinic.id, costEstimate: 0 },
   });
 
   await prisma.siteContent.upsert({

@@ -8,15 +8,14 @@ declare module "next-auth" {
       role: "owner" | "admin";
       clinicId?: string;
       email?: string | null;
-      phone?: string | null;
     };
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    uid: string;
-    role: "owner" | "admin";
+    uid?: string;
+    role?: "owner" | "admin";
     clinicId?: string;
   }
 }

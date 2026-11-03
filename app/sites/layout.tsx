@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { notFound } from "next/navigation";
 import Script from "next/script";
 import "@/app/globals.css";
 import { displayFont } from "@/lib/fonts";
@@ -12,7 +11,15 @@ import { resolveClinicByHost } from "@/lib/resolveSiteByHost";
  */
 export default async function SiteLayout({ children }: { children: ReactNode }) {
   const site = await resolveClinicByHost();
-  if (!site) notFound();
+  if (!site) {
+    // Unknown host: the page below calls notFound(), which renders sites/not-found
+    // inside this shell with a 404 status. (Throwing here would skip the shell.)
+    return (
+      <html lang="en" className={displayFont.variable}>
+        <body className="bg-white text-slate-900 antialiased">{children}</body>
+      </html>
+    );
+  }
 
   const isLive = site.status === "live";
 

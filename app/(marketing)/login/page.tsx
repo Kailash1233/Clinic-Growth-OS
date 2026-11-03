@@ -12,8 +12,8 @@ function LoginForm() {
   const params = useSearchParams();
   const next = params.get("next") ?? "/dashboard";
 
-  const [step, setStep] = useState<"identifier" | "code">("identifier");
-  const [identifier, setIdentifier] = useState("");
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ function LoginForm() {
       const res = await fetch("/api/auth/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, turnstileToken: token }),
+        body: JSON.stringify({ email, turnstileToken: token }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to send code");
@@ -48,7 +48,7 @@ function LoginForm() {
     setLoading(true);
     setError(null);
     try {
-      const res = await signIn("otp", { identifier, code, redirect: false });
+      const res = await signIn("otp", { email, code, redirect: false });
       if (res?.error) throw new Error("Invalid or expired code");
       router.push(next);
     } catch (err: any) {
@@ -68,16 +68,17 @@ function LoginForm() {
         <div className="flex flex-1 items-center">
           <div className="mx-auto w-full max-w-sm">
             <h1 className="text-3xl font-bold text-ink-900">Welcome back</h1>
-            <p className="mt-2 text-ink-500">We&apos;ll email or text you a one-time code — no password needed.</p>
+            <p className="mt-2 text-ink-500">We&apos;ll email you a one-time code — no password needed.</p>
 
-            {step === "identifier" ? (
+            {step === "email" ? (
               <form onSubmit={handleSendCode} className="mt-8 space-y-4">
                 <input
-                  type="text"
+                  type="email"
                   required
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="Email or phone number"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@clinic.com"
                   className="w-full rounded-xl border border-ink-200 px-4 py-3 text-ink-900 placeholder:text-ink-400 focus:border-mint-500 focus:outline-none focus:ring-2 focus:ring-mint-500/30"
                 />
                 <TurnstileWidget onVerify={setToken} />
@@ -92,9 +93,12 @@ function LoginForm() {
               </form>
             ) : (
               <form onSubmit={handleVerify} className="mt-8 space-y-4">
-                <p className="text-sm text-ink-700">Enter the 6-digit code sent to {identifier}.</p>
+                <p className="text-sm text-ink-700">Enter the 6-digit code sent to {email}.</p>
                 <input
                   type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
                   required
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
@@ -117,23 +121,6 @@ function LoginForm() {
 
       <div className="relative hidden overflow-hidden bg-mint-50 lg:block">
         <LoginIllustration className="absolute inset-0 h-full w-full object-cover" />
-
-        <div className="absolute bottom-10 left-10 right-10 rounded-2xl bg-white p-6">
-          <p className="text-sm font-semibold text-mint-500">Fully booked this month</p>
-          <p className="mt-1 text-xl font-bold text-ink-900">
-            &ldquo;We stopped worrying about where our next patient was coming from.&rdquo;
-          </p>
-          <div className="mt-4 flex gap-6 text-sm">
-            <div>
-              <p className="text-2xl font-bold text-ink-900">+41%</p>
-              <p className="text-ink-500">new patients</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-ink-900">4.8★</p>
-              <p className="text-ink-500">average rating</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

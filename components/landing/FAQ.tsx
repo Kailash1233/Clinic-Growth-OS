@@ -1,3 +1,4 @@
+import { contactEmail } from "@/lib/env";
 const FAQS: [string, string][] = [
   [
     "What does it cost?",
@@ -30,18 +31,21 @@ const FAQS: [string, string][] = [
 ];
 
 export default function FAQ() {
+  const email = contactEmail();
   return (
     <section className="bg-white px-6 py-20">
       <div className="mx-auto grid max-w-5xl gap-10 sm:grid-cols-[1fr_2fr]">
         <div>
           <h2 className="text-3xl font-bold text-ink-900">Questions, answered.</h2>
-          <p className="mt-4 text-sm text-ink-500">
-            Still have questions?{" "}
-            <a href="mailto:hello@yourbrand.in" className="text-mint-500 underline">
-              Contact us
-            </a>
-            .
-          </p>
+          {email && (
+            <p className="mt-4 text-sm text-ink-500">
+              Still have questions?{" "}
+              <a href={`mailto:${email}`} className="text-mint-500 underline">
+                Contact us
+              </a>
+              .
+            </p>
+          )}
         </div>
 
         <div className="divide-y divide-ink-100 rounded-2xl border border-ink-100 bg-white">

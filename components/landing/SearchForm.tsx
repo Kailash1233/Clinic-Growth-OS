@@ -4,14 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import TurnstileWidget from "@/components/TurnstileWidget";
 
-const DEMO_BUSINESS_NAME = "Lakshmi Dental Care";
-
 /**
- * Hits the real /api/clinics/search endpoint (Turnstile + rate-limited,
- * requirements.md §10) — used in both the hero and the final-CTA section.
- * In demo mode (no GOOGLE_PLACES_API_KEY set) the search still runs for
- * real, it just resolves against lib/mockBusinessData.ts instead of the
- * live Places API — same endpoint, same code path either way.
+ * Starts an audit through /api/clinics/search (Turnstile-checked and
+ * rate-limited) — used in both the hero and the final-CTA section.
  */
 export default function SearchForm({ variant = "hero" }: { variant?: "hero" | "compact" }) {
   const router = useRouter();
@@ -74,20 +69,6 @@ export default function SearchForm({ variant = "hero" }: { variant?: "hero" | "c
         className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-sm ${isHero ? "text-ink-500" : "text-white/60"}`}
       >
         <span>Can&apos;t find your business? Try adding your city.</span>
-        <span className={isHero ? "text-ink-200" : "text-white/30"}>·</span>
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => {
-            setQuery(DEMO_BUSINESS_NAME);
-            runAudit(DEMO_BUSINESS_NAME);
-          }}
-          className={`font-semibold underline-offset-2 hover:underline disabled:opacity-50 ${
-            isHero ? "text-mint-500" : "text-mint-400"
-          }`}
-        >
-          Or see a live example: {DEMO_BUSINESS_NAME} →
-        </button>
       </div>
     </div>
   );

@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { contactEmail } from "@/lib/env";
 
-const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
+function columns(): { title: string; links: { label: string; href: string }[] }[] {
+  const email = contactEmail();
+  return [
   {
     title: "Product",
     links: [
@@ -8,11 +11,9 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Login", href: "/login" },
     ],
   },
-  {
-    title: "Company",
-    links: [{ label: "Contact", href: "mailto:hello@yourbrand.in" }],
-  },
-];
+  ...(email ? [{ title: "Company", links: [{ label: "Contact", href: `mailto:${email}` }] }] : []),
+  ];
+}
 
 export default function Footer() {
   return (
@@ -26,7 +27,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {COLUMNS.map((col) => (
+          {columns().map((col) => (
             <div key={col.title}>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-white/50">{col.title}</h3>
               <ul className="mt-4 space-y-2 text-sm">

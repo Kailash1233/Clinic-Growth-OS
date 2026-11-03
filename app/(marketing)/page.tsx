@@ -4,7 +4,6 @@ import IntroStatement from "@/components/landing/IntroStatement";
 import HubPanel from "@/components/landing/HubPanel";
 import ReputationShowcase from "@/components/landing/ReputationShowcase";
 import AlternatingRows from "@/components/landing/AlternatingRows";
-import Testimonials from "@/components/landing/Testimonials";
 import TrustBanner from "@/components/landing/TrustBanner";
 import ComparisonTable from "@/components/landing/ComparisonTable";
 import FAQ from "@/components/landing/FAQ";
@@ -19,7 +18,6 @@ export default function HomePage() {
       <HubPanel />
       <ReputationShowcase />
       <AlternatingRows />
-      <Testimonials />
       <TrustBanner />
       <ComparisonTable />
       <FAQ />

@@ -1,3 +1,4 @@
+import { appBaseDomain } from "@/lib/siteUrl";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
@@ -11,8 +12,8 @@ export type ResolvedSite = Awaited<ReturnType<typeof resolveClinicByHost>>;
  */
 export const resolveClinicByHost = cache(async () => {
   const host = headers().get("host") ?? "";
-  const hostname = host.split(":")[0];
-  const baseDomain = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
+  const hostname = host.split(":")[0].toLowerCase();
+  const baseDomain = appBaseDomain();
 
   const suffix = `.${baseDomain}`;
   const isSubdomain = hostname.endsWith(suffix);

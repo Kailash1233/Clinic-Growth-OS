@@ -41,7 +41,7 @@ enum GscVerificationMethod {
 enum GenerationApi {
   places
   pagespeed
-  openai
+  groq
 }
 
 enum UserRole {
@@ -62,7 +62,6 @@ enum NotificationType {
 
 enum NotificationChannel {
   email
-  sms
 }
 
 model Clinic {
@@ -161,7 +160,6 @@ model SiteSettings {
 model User {
   id        String   @id @default(cuid())
   email     String?  @unique
-  phone     String?  @unique
   role      UserRole @default(owner)
   clinicId  String?  @map("clinic_id")
   clinic    Clinic?  @relation(fields: [clinicId], references: [id])

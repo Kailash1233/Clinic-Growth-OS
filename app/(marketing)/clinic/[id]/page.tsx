@@ -1,3 +1,4 @@
+import { siteBaseUrl } from "@/lib/siteUrl";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -8,7 +9,6 @@ import InsightsGrid from "@/components/report/InsightsGrid";
 import GenerateDemoButton from "@/components/GenerateDemoButton";
 import CheckoutButton from "@/components/CheckoutButton";
 import SimpleHeader from "@/components/SimpleHeader";
-import Testimonials from "@/components/landing/Testimonials";
 import { generateInsights } from "@/lib/insights";
 
 export default async function ClinicPage({ params }: { params: { id: string } }) {
@@ -28,7 +28,6 @@ export default async function ClinicPage({ params }: { params: { id: string } })
   const score = clinic.scores[0];
   const health = clinic.siteHealthChecks[0];
   const activeSubscription = clinic.subscriptions[0]?.status === "active";
-  const baseDomain = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
 
   const conversion = (health?.conversionChecks as Record<string, boolean> | null) ?? {
     hasPhoneLink: false,
@@ -117,7 +116,7 @@ export default async function ClinicPage({ params }: { params: { id: string } })
               </div>
               {clinic.siteSettings && (
                 <a
-                  href={`https://${clinic.siteSettings.subdomainSlug}.${baseDomain}`}
+                  href={siteBaseUrl(clinic.siteSettings) ?? "#"}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 font-semibold text-mint-500 hover:underline"
@@ -139,8 +138,6 @@ export default async function ClinicPage({ params }: { params: { id: string } })
           )}
         </div>
       </main>
-
-      <Testimonials />
     </div>
   );
 }

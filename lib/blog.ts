@@ -1,7 +1,7 @@
 import type { BlogPost } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { researchKeywords, type KeywordResearch } from "@/lib/keywordResearch";
-import { generateBlogPost } from "@/lib/aiProvider";
+import { generateBlogPost } from "@/lib/ai";
 import { generateUniqueSlug } from "@/lib/slug";
 import { appUrl, sendEmail } from "@/lib/email";
 import { notifyOnce } from "@/lib/notify";
@@ -123,7 +123,7 @@ export async function generateBlogDraft(clinicId: string, opts: { userId: string
   });
 
   await prisma.generationUsage.create({
-    data: { api: "openai", userId: opts.userId, clinicId, costEstimate: 0.01 },
+    data: { api: "groq", userId: opts.userId, clinicId, costEstimate: 0 },
   });
 
   await notifyOwnersOfDraft(created, clinic.name);

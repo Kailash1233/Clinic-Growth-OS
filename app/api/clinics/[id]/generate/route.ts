@@ -1,7 +1,8 @@
+import { siteBaseUrl } from "@/lib/siteUrl";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { generateSiteContent } from "@/lib/aiProvider";
+import { generateSiteContent } from "@/lib/ai";
 import { generateSubdomainSlug } from "@/lib/slug";
 import { extractCity, formatOpeningHours } from "@/lib/clinicIngest";
 
@@ -35,7 +36,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     }
   } else {
     const priorFreeGeneration = await prisma.generationUsage.findFirst({
-      where: { userId: user.id, api: "openai" },
+      where: { userId: user.id, api: "groq" },
     });
     if (priorFreeGeneration) {
       return NextResponse.json(
@@ -58,7 +59,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   });
 
   await prisma.generationUsage.create({
-    data: { api: "openai", userId: user.id, clinicId: clinic.id, costEstimate: 0.01 },
+    data: { api: "groq", userId: user.id, clinicId: clinic.id, costEstimate: 0 },
   });
 
   await prisma.siteContent.upsert({
@@ -97,11 +98,9 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
 
   await prisma.clinic.update({ where: { id: clinic.id }, data: { status: "demo" } });
 
-  const baseDomain = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
-
   return NextResponse.json({
     content: generated.content,
-    demoUrl: `https://${siteSettings.subdomainSlug}.${baseDomain}`,
+    demoUrl: siteBaseUrl(siteSettings),
     status: siteSettings.status,
   });
 }

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { appUrl, sendEmail, sendTemplateSms } from "@/lib/email";
+import { appUrl, sendEmail } from "@/lib/email";
 import { isoWeekKey, notifyOnce, type NotifyOutcome } from "@/lib/notify";
 
 export function photoReminderEmail(clinicName: string): { subject: string; text: string } {
@@ -41,7 +41,7 @@ export async function sendWeeklyPhotoReminders(now = new Date()): Promise<Remind
       subscriptions: { some: { status: "active" } },
       siteSettings: { is: { photoRemindersEnabled: true } },
     },
-    select: { id: true, name: true, users: { select: { id: true, email: true, phone: true } } },
+    select: { id: true, name: true, users: { select: { id: true, email: true } } },
     take: 500,
   });
 
@@ -65,23 +65,6 @@ export async function sendWeeklyPhotoReminders(now = new Date()): Promise<Remind
             recipient: user.email,
             periodKey,
             send: () => sendEmail({ to: user.email!, subject, text }),
-          })
-        );
-      } else if (user.phone && process.env.MSG91_PHOTO_REMINDER_TEMPLATE_ID) {
-        tally(
-          await notifyOnce({
-            clinicId: clinic.id,
-            userId: user.id,
-            type: "photo_reminder",
-            channel: "sms",
-            recipient: user.phone,
-            periodKey,
-            send: () =>
-              sendTemplateSms({
-                phone: user.phone!,
-                templateId: process.env.MSG91_PHOTO_REMINDER_TEMPLATE_ID,
-                variables: { clinic: clinic.name },
-              }),
           })
         );
       } else {

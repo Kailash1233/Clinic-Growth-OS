@@ -6,6 +6,8 @@
  * separately in lib/siteHealth.ts (robots.txt / meta robots), not here.
  */
 
+import { requireEnv } from "@/lib/env";
+
 export type PageSpeedResult = {
   performance: number | null; // 0-1 native scale
   seo: number | null;
@@ -13,8 +15,7 @@ export type PageSpeedResult = {
 };
 
 export async function getPageSpeedScores(url: string): Promise<PageSpeedResult> {
-  const key = process.env.GOOGLE_PAGESPEED_API_KEY;
-  if (!key) throw new Error("GOOGLE_PAGESPEED_API_KEY is not configured");
+  const key = requireEnv("GOOGLE_PAGESPEED_API_KEY");
 
   const endpoint = new URL("https://www.googleapis.com/pagespeedonline/v5/runPagespeed");
   endpoint.searchParams.set("url", url);
@@ -24,7 +25,7 @@ export async function getPageSpeedScores(url: string): Promise<PageSpeedResult> 
     endpoint.searchParams.append("category", category);
   }
 
-  const res = await fetch(endpoint.toString());
+  const res = await fetch(endpoint.toString(), { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`PageSpeed request failed: ${res.status} ${await res.text()}`);
   }

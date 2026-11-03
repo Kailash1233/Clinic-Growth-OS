@@ -4,7 +4,8 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@example.com";
+  const adminEmail = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase();
+  if (!adminEmail) throw new Error("Set SEED_ADMIN_EMAIL in .env to the email that should become the admin.");
 
   await prisma.user.upsert({
     where: { email: adminEmail },
@@ -12,12 +13,12 @@ async function main() {
     create: { email: adminEmail, role: "admin" },
   });
 
-  console.log(`Seeded admin user: ${adminEmail} (sign in with OTP — check server logs for the dev code)`);
+  console.log(`Admin ready: ${adminEmail}. Sign in at /login with that email; the code arrives by email.`);
 }
 
 main()
   .catch((err) => {
-    console.error(err);
+    console.error(err instanceof Error ? err.message : err);
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());

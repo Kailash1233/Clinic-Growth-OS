@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const APP_BASE_DOMAIN = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
+const APP_BASE_DOMAIN = (process.env.APP_BASE_DOMAIN ?? "localhost").toLowerCase();
 
 function isAppHost(hostname: string): boolean {
   return (
@@ -23,7 +23,7 @@ function isAppHost(hostname: string): boolean {
  */
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
-  const hostname = host.split(":")[0];
+  const hostname = host.split(":")[0].toLowerCase();
 
   if (isAppHost(hostname)) {
     return NextResponse.next();

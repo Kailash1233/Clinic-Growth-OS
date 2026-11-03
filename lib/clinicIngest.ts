@@ -1,11 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { generateClinicSlug } from "@/lib/slug";
-import { placePhotoUrl } from "@/lib/places";
-import { searchPlaceByText, type PlaceSearchResult } from "@/lib/placesProvider";
+import { placePhotoUrl, searchPlaceByText, type PlaceSearchResult } from "@/lib/places";
 import { getPageSpeedScores } from "@/lib/pagespeed";
 import { checkRobotsAndIndexability, checkConversionReadiness } from "@/lib/siteHealth";
 import { computeOverallScore } from "@/lib/scoring";
-import { mirrorPlacesPhotoToR2 } from "@/lib/r2";
+import { mirrorPlacesPhoto } from "@/lib/storage";
 
 function formatOpeningHours(hours: unknown): string {
   const weekdayText = (hours as any)?.weekdayDescriptions as string[] | undefined;
@@ -17,7 +16,7 @@ function extractCity(address: string): string {
   return parts.length >= 2 ? parts[parts.length - 3] ?? parts[0] : address;
 }
 
-async function logUsage(api: "places" | "pagespeed" | "openai", clinicId: string | null, userId: string | null, cost: number) {
+async function logUsage(api: "places" | "pagespeed" | "groq", clinicId: string | null, userId: string | null, cost: number) {
   await prisma.generationUsage.create({
     data: { api, clinicId, userId, costEstimate: cost },
   });
@@ -41,9 +40,10 @@ export async function ingestClinicFromPlace(place: PlaceSearchResult, userId: st
       try {
         const sourceUrl = placePhotoUrl(place.photos[i]);
         const clinicIdForKey = place.placeId; // stable namespace before we have a DB id
-        photoUrls.push(await mirrorPlacesPhotoToR2(sourceUrl, clinicIdForKey, i));
-      } catch {
-        // R2 not configured or fetch failed — non-fatal, demo can still render without photos.
+        photoUrls.push(await mirrorPlacesPhoto(sourceUrl, clinicIdForKey, i));
+      } catch (err) {
+        // A photo that can't be copied shouldn't block the audit, but it must be visible in logs.
+        console.error(`[storage] photo ${i} for ${place.placeId} not stored:`, err instanceof Error ? err.message : err);
       }
     }
   }
@@ -128,8 +128,9 @@ export async function runHealthCheckAndScore(
       await prisma.generationUsage.create({
         data: { api: "pagespeed", clinicId, costEstimate: 0 },
       });
-    } catch {
+    } catch (err) {
       // PageSpeed can legitimately fail (site down, blocked) — health score just stays partial.
+      console.error("[pagespeed]", err instanceof Error ? err.message : err);
     }
 
     try {

@@ -20,7 +20,7 @@ const INTEGRATIONS = [
   { name: "WhatsApp", caption: "Click-to-chat on your site", side: "right" as const },
 ];
 
-const POWERED_BY = ["Google", "OpenAI", "Razorpay"];
+const POWERED_BY = ["Google", "Groq", "Razorpay"];
 
 export default function HubPanel() {
   return (

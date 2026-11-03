@@ -1,7 +1,7 @@
 import { type NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import { verifyOtp } from "@/lib/otp";
+import { normalizeEmail, verifyOtp } from "@/lib/otp";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -14,29 +14,20 @@ export const authOptions: NextAuthOptions = {
       id: "otp",
       name: "OTP",
       credentials: {
-        identifier: { label: "Email or phone", type: "text" },
+        email: { label: "Email", type: "email" },
         code: { label: "Code", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.identifier || !credentials?.code) return null;
+        if (!credentials?.email || !credentials?.code) return null;
 
-        const ok = await verifyOtp(credentials.identifier, credentials.code);
-        if (!ok) return null;
+        const email = normalizeEmail(credentials.email);
+        if (!(await verifyOtp(email, credentials.code))) return null;
 
-        const isEmail = credentials.identifier.includes("@");
-        const where = isEmail ? { email: credentials.identifier } : { phone: credentials.identifier };
-
-        let user = await prisma.user.findFirst({ where });
-        if (!user) {
-          user = await prisma.user.create({
-            data: isEmail ? { email: credentials.identifier } : { phone: credentials.identifier },
-          });
-        }
+        const user = await prisma.user.upsert({ where: { email }, update: {}, create: { email } });
 
         return {
           id: user.id,
-          email: user.email ?? undefined,
-          phone: user.phone ?? undefined,
+          email: user.email,
           role: user.role,
           clinicId: user.clinicId ?? undefined,
         } as any;
@@ -45,14 +36,22 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.uid = (user as any).id;
-        token.role = (user as any).role;
-        token.clinicId = (user as any).clinicId;
+      if (user) token.uid = (user as any).id;
+      // Role and clinic change after sign-in (generating a site links the clinic),
+      // so read them fresh instead of trusting what was true at login.
+      if (token.uid) {
+        const current = await prisma.user.findUnique({
+          where: { id: token.uid as string },
+          select: { role: true, clinicId: true },
+        });
+        if (!current) return { ...token, uid: undefined, role: undefined, clinicId: undefined }; // account deleted: signed out
+        token.role = current.role;
+        token.clinicId = current.clinicId ?? undefined;
       }
       return token;
     },
     async session({ session, token }) {
+      if (!token.uid) return { ...session, user: undefined } as any;
       if (session.user) {
         (session.user as any).id = token.uid;
         (session.user as any).role = token.role;
@@ -70,7 +69,7 @@ export function getServerAuthSession() {
 export async function requireUser() {
   const session = await getServerAuthSession();
   if (!session?.user) throw new Error("UNAUTHENTICATED");
-  return session.user as { id: string; role: "owner" | "admin"; clinicId?: string; email?: string; phone?: string };
+  return session.user as { id: string; role: "owner" | "admin"; clinicId?: string; email?: string };
 }
 
 export async function requireAdmin() {

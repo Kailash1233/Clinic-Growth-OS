@@ -1,3 +1,4 @@
+import { siteBaseUrl, siteDisplayHost } from "@/lib/siteUrl";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -37,7 +38,6 @@ export default async function DashboardOverviewPage() {
   });
   const score = clinic.scores[0];
   const subscription = clinic.subscriptions[0];
-  const baseDomain = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -75,18 +75,12 @@ export default async function DashboardOverviewPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-500">Your site</p>
           <a
-            href={`https://${
-              clinic.siteSettings.domainVerified && clinic.siteSettings.customDomain
-                ? clinic.siteSettings.customDomain
-                : `${clinic.siteSettings.subdomainSlug}.${baseDomain}`
-            }`}
+            href={siteBaseUrl(clinic.siteSettings) ?? "#"}
             target="_blank"
             rel="noreferrer"
             className="text-brand-700 underline"
           >
-            {clinic.siteSettings.domainVerified && clinic.siteSettings.customDomain
-              ? clinic.siteSettings.customDomain
-              : `${clinic.siteSettings.subdomainSlug}.${baseDomain}`}
+            {siteDisplayHost(clinic.siteSettings)}
           </a>
         </div>
       )}

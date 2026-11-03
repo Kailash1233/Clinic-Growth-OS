@@ -1,3 +1,4 @@
+import { appBaseDomain } from "@/lib/siteUrl";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import DomainConnectForm from "@/components/DomainConnectForm";
@@ -7,7 +8,7 @@ export default async function DomainPage() {
   if (!user.clinicId) return <p className="text-slate-500">No clinic on this account yet.</p>;
 
   const settings = await prisma.siteSettings.findUnique({ where: { clinicId: user.clinicId } });
-  const baseDomain = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
+  const baseDomain = appBaseDomain();
 
   return (
     <div className="max-w-xl">

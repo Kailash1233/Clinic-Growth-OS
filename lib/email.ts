@@ -1,61 +1,42 @@
+import nodemailer, { type Transporter } from "nodemailer";
+import { requireEnv } from "@/lib/env";
+
 export type SendResult = { delivered: boolean; error?: string };
 
 export function appUrl(path = ""): string {
-  const base = (process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const base = requireEnv("NEXTAUTH_URL").replace(/\/$/, "");
   return `${base}${path}`;
 }
 
-/** Transactional email via Resend. Without a key, logs the email instead of pretending it was sent. */
-export async function sendEmail(params: { to: string; subject: string; text: string }): Promise<SendResult> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn(`[email] RESEND_API_KEY not set — not sent. To: ${params.to} | ${params.subject}\n${params.text}`);
-    return { delivered: false, error: "RESEND_API_KEY not set" };
-  }
+let transporter: Transporter | null = null;
 
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM ?? "noreply@example.com",
-        to: params.to,
-        subject: params.subject,
-        text: params.text,
-      }),
+/** SMTP transport (Gmail by default: smtp.gmail.com, port 465, an App Password). */
+export function getTransporter(): Transporter {
+  if (!transporter) {
+    const port = Number(requireEnv("SMTP_PORT"));
+    transporter = nodemailer.createTransport({
+      host: requireEnv("SMTP_HOST"),
+      port,
+      secure: port === 465,
+      auth: { user: requireEnv("SMTP_USER"), pass: requireEnv("SMTP_PASS") },
     });
-    if (!res.ok) return { delivered: false, error: `Resend ${res.status}: ${(await res.text()).slice(0, 300)}` };
-    return { delivered: true };
-  } catch (err) {
-    return { delivered: false, error: err instanceof Error ? err.message : String(err) };
   }
+  return transporter;
 }
 
-/**
- * SMS via an MSG91 Flow template. Indian SMS needs a DLT-approved template, so
- * this only sends when MSG91_PHOTO_REMINDER_TEMPLATE_ID is configured.
- */
-export async function sendTemplateSms(params: {
-  phone: string;
-  templateId: string | undefined;
-  variables: Record<string, string>;
-}): Promise<SendResult> {
-  const apiKey = process.env.OTP_PROVIDER_API_KEY;
-  if (!apiKey || !params.templateId) {
-    return { delivered: false, error: "MSG91 key or template id not set" };
-  }
+/** Sends one plain-text email. Never throws: callers record the result. */
+export async function sendEmail(params: { to: string; subject: string; text: string }): Promise<SendResult> {
   try {
-    const res = await fetch("https://control.msg91.com/api/v5/flow", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", authkey: apiKey },
-      body: JSON.stringify({
-        template_id: params.templateId,
-        recipients: [{ mobiles: params.phone.replace(/^\+/, ""), ...params.variables }],
-      }),
+    await getTransporter().sendMail({
+      from: requireEnv("EMAIL_FROM"),
+      to: params.to,
+      subject: params.subject,
+      text: params.text,
     });
-    if (!res.ok) return { delivered: false, error: `MSG91 ${res.status}: ${(await res.text()).slice(0, 300)}` };
     return { delivered: true };
   } catch (err) {
-    return { delivered: false, error: err instanceof Error ? err.message : String(err) };
+    const error = err instanceof Error ? err.message : String(err);
+    console.error(`[email] to ${params.to} failed: ${error}`);
+    return { delivered: false, error };
   }
 }

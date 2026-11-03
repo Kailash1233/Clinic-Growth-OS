@@ -1,14 +1,12 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import { requireEnv } from "@/lib/env";
 
 let client: Razorpay | null = null;
 
 export function getRazorpayClient(): Razorpay {
   if (!client) {
-    const key_id = process.env.RAZORPAY_KEY_ID;
-    const key_secret = process.env.RAZORPAY_KEY_SECRET;
-    if (!key_id || !key_secret) throw new Error("Razorpay keys are not configured");
-    client = new Razorpay({ key_id, key_secret });
+    client = new Razorpay({ key_id: requireEnv("RAZORPAY_KEY_ID"), key_secret: requireEnv("RAZORPAY_KEY_SECRET") });
   }
   return client;
 }
@@ -39,9 +37,10 @@ export async function createSubscription(params: {
 
 /** Verifies the `X-Razorpay-Signature` header on incoming webhooks. */
 export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-  if (!secret) throw new Error("RAZORPAY_WEBHOOK_SECRET is not configured");
+  const secret = requireEnv("RAZORPAY_WEBHOOK_SECRET");
 
-  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  const expected = Buffer.from(crypto.createHmac("sha256", secret).update(rawBody).digest("hex"));
+  const given = Buffer.from(signature);
+  // timingSafeEqual throws on different lengths; a wrong-length signature is simply invalid.
+  return given.length === expected.length && crypto.timingSafeEqual(expected, given);
 }
