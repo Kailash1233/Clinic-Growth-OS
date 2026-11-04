@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth";
 import { generateSentimentSummary } from "@/lib/ai";
 
 /** v2 §1: on-demand sentiment rollup over the clinic's most recent reviews. */
+export const maxDuration = 60;
+
 export async function POST() {
   let user;
   try {

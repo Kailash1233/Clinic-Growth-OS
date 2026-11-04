@@ -31,3 +31,8 @@ test("site URLs use https and the verified custom domain in production", withEnv
   assert.equal(siteBaseUrl({ ...settings, customDomain: "lakshmidental.in", domainVerified: true }), "https://lakshmidental.in");
   assert.equal(siteBaseUrl({ ...settings, customDomain: "lakshmidental.in", domainVerified: false }), "https://lakshmi.clinicgrowth.in");
 }));
+
+test("on *.vercel.app, clinic sites are served by path (no sub-subdomains there)", withEnv({ NEXTAUTH_URL: "https://clinic-growth-os-puce.vercel.app", APP_BASE_DOMAIN: "clinic-growth-os-puce.vercel.app" }, () => {
+  assert.equal(siteBaseUrl(settings), "https://clinic-growth-os-puce.vercel.app/s/lakshmi");
+  assert.equal(siteBaseUrl({ ...settings, customDomain: "lakshmidental.in", domainVerified: true }), "https://lakshmidental.in");
+}));

@@ -24,11 +24,20 @@ export async function POST(req: NextRequest) {
 
   const clinic = await prisma.clinic.findUnique({ where: { id: clinicId } });
   if (!clinic) return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
+  if (user.clinicId !== clinic.id && user.role !== "admin") {
+    return NextResponse.json({ error: "Generate this clinic's site from your account first." }, { status: 403 });
+  }
 
-  const rzpSubscription = await createSubscription({
-    planTier: planTier as PlanTier,
-    customerNotifyEmail: user.email ?? undefined,
-  });
+  let rzpSubscription;
+  try {
+    rzpSubscription = await createSubscription({
+      planTier: planTier as PlanTier,
+      customerNotifyEmail: user.email ?? undefined,
+    });
+  } catch (err) {
+    console.error("[checkout]", err);
+    return NextResponse.json({ error: "Payments are unavailable right now. Please try again shortly." }, { status: 502 });
+  }
 
   await prisma.subscription.create({
     data: {

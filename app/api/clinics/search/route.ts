@@ -15,6 +15,8 @@ const bodySchema = z.object({
  * by name, get an instant growth score. Turnstile + IP rate-limited since this
  * triggers paid Places/PageSpeed calls.
  */
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {

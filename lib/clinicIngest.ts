@@ -59,6 +59,7 @@ export async function ingestClinicFromPlace(place: PlaceSearchResult, userId: st
         hours: place.hours as any,
         rating: place.rating,
         reviewCount: place.userRatingCount,
+        businessStatus: place.businessStatus,
         ...(photoUrls.length ? { photos: photoUrls } : {}),
       },
     });
@@ -75,6 +76,7 @@ export async function ingestClinicFromPlace(place: PlaceSearchResult, userId: st
         hours: place.hours as any,
         rating: place.rating,
         reviewCount: place.userRatingCount,
+        businessStatus: place.businessStatus,
         photos: photoUrls,
       },
     });
@@ -154,6 +156,8 @@ export async function runHealthCheckAndScore(
       existingSiteUrl,
       mobileFriendly: performance != null ? performance >= 0.5 : null,
       loadSpeedScore: performance != null ? Math.round(performance * 100) : null,
+      seoScore: seo != null ? Math.round(seo * 100) : null,
+      accessibilityScore: accessibility != null ? Math.round(accessibility * 100) : null,
       isIndexed,
       conversionChecks: conversion as any,
     },

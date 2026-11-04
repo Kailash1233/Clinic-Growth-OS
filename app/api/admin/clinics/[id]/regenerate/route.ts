@@ -3,8 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { generateSiteContent } from "@/lib/ai";
 import { extractCity, formatOpeningHours } from "@/lib/clinicIngest";
+import { generateSubdomainSlug } from "@/lib/slug";
 
 /** Requirements §11: manually trigger regeneration for any clinic (bypasses the subscriber gate — admin action). */
+export const maxDuration = 60;
+
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   let admin;
   try {
@@ -16,7 +19,9 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   const clinic = await prisma.clinic.findUnique({ where: { id: params.id } });
   if (!clinic) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const generated = await generateSiteContent({
+  let generated;
+  try {
+    generated = await generateSiteContent({
     name: clinic.name,
     category: clinic.category ?? "Clinic",
     address: clinic.address ?? "",
@@ -26,7 +31,11 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     userRatingCount: clinic.reviewCount,
     editorialSummary: null,
     servicesListOrNone: "none",
-  });
+    });
+  } catch (err) {
+    console.error("[admin/regenerate]", err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: `AI generation failed: ${err instanceof Error ? err.message.slice(0, 160) : "unknown error"}` }, { status: 502 });
+  }
 
   await prisma.generationUsage.create({
     data: { api: "groq", userId: admin.id, clinicId: clinic.id, costEstimate: 0 },
@@ -54,5 +63,12 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     },
   });
 
-  return NextResponse.json({ ok: true, content: generated.content });
+  const settings = await prisma.siteSettings.findUnique({ where: { clinicId: clinic.id } });
+  if (!settings) {
+    await prisma.siteSettings.create({
+      data: { clinicId: clinic.id, subdomainSlug: await generateSubdomainSlug(clinic.name), status: "draft" },
+    });
+  }
+
+  return NextResponse.json({ ok: true, message: `New site copy: "${generated.content.headline}"` });
 }

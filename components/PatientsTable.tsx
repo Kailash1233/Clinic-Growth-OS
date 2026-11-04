@@ -72,7 +72,7 @@ export default function PatientsTable({ initialPatients }: { initialPatients: Pa
                 <button
                   onClick={() => markToday(p.id)}
                   disabled={busyId === p.id}
-                  className="text-brand-700 underline disabled:opacity-50"
+                  className="text-mint-500 underline disabled:opacity-50"
                 >
                   Mark visit today
                 </button>

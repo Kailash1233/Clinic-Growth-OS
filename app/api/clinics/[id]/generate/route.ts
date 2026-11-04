@@ -11,6 +11,8 @@ import { extractCity, formatOpeningHours } from "@/lib/clinicIngest";
  * (§10: never allow generation pre-signup). Quota: one free generation per
  * account; regeneration requires an active subscription for that clinic (§10).
  */
+export const maxDuration = 60;
+
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   let user;
   try {
@@ -21,6 +23,11 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
 
   const clinic = await prisma.clinic.findUnique({ where: { id: params.id } });
   if (!clinic) return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
+
+  const otherOwner = await prisma.user.findFirst({ where: { clinicId: clinic.id, id: { not: user.id }, role: "owner" } });
+  if (otherOwner && user.role !== "admin") {
+    return NextResponse.json({ error: "This clinic is already managed by another account." }, { status: 403 });
+  }
 
   const existingContent = await prisma.siteContent.findUnique({ where: { clinicId: clinic.id } });
 
@@ -46,7 +53,9 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     }
   }
 
-  const generated = await generateSiteContent({
+  let generated;
+  try {
+    generated = await generateSiteContent({
     name: clinic.name,
     category: clinic.category ?? "Clinic",
     address: clinic.address ?? "",
@@ -56,7 +65,11 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     userRatingCount: clinic.reviewCount,
     editorialSummary: null,
     servicesListOrNone: "none",
-  });
+    });
+  } catch (err) {
+    console.error("[generate]", err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: "The AI couldn't write the site just now. Please try again in a minute." }, { status: 502 });
+  }
 
   await prisma.generationUsage.create({
     data: { api: "groq", userId: user.id, clinicId: clinic.id, costEstimate: 0 },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const APP_BASE_DOMAIN = (process.env.APP_BASE_DOMAIN ?? "localhost").toLowerCase();
+export const CLINIC_SLUG_HEADER = "x-clinic-slug";
 
 function isAppHost(hostname: string): boolean {
   return (
@@ -13,25 +14,30 @@ function isAppHost(hostname: string): boolean {
 }
 
 /**
- * Requirements §8: the renderer resolves the incoming Host header (subdomain
- * or custom domain) to a clinic, sharing one render path regardless of hostname.
- * Any host that isn't the marketing app itself is a clinic's public site —
- * rewrite it into the shared renderer at /sites/[[...site]], which re-reads
- * the original Host header via headers() to do the actual clinic lookup.
- * (Not named "_sites": Next.js treats leading-underscore folders under app/
- * as private and excludes them from routing entirely.)
+ * Every clinic site renders through /sites/[[...site]]. Three ways in:
+ *  - a subdomain:     <slug>.APP_BASE_DOMAIN/...   (needs a wildcard domain)
+ *  - a custom domain: lakshmidental.in/...
+ *  - a path:          APP_BASE_DOMAIN/s/<slug>/... (works anywhere, e.g. on *.vercel.app,
+ *                     which does not allow sub-subdomains)
+ * The renderer finds the clinic from the slug header (path) or the Host header.
  */
 export function middleware(req: NextRequest) {
-  const host = req.headers.get("host") ?? "";
-  const hostname = host.split(":")[0].toLowerCase();
+  const hostname = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
+  const headers = new Headers(req.headers);
+  headers.delete(CLINIC_SLUG_HEADER); // only this middleware may set it
 
   if (isAppHost(hostname)) {
-    return NextResponse.next();
+    const match = req.nextUrl.pathname.match(/^\/s\/([a-z0-9-]+)(\/.*)?$/);
+    if (!match) return NextResponse.next({ request: { headers } });
+    headers.set(CLINIC_SLUG_HEADER, match[1]);
+    const url = req.nextUrl.clone();
+    url.pathname = `/sites${match[2] && match[2] !== "/" ? match[2] : ""}`;
+    return NextResponse.rewrite(url, { request: { headers } });
   }
 
   const url = req.nextUrl.clone();
   url.pathname = `/sites${req.nextUrl.pathname}`;
-  return NextResponse.rewrite(url);
+  return NextResponse.rewrite(url, { request: { headers } });
 }
 
 export const config = {
@@ -39,6 +45,6 @@ export const config = {
   // (favicon.ico, /screenshots/*.png, robots.txt, etc.) — static assets must
   // never be rewritten into the per-host clinic-site renderer, and Next's
   // own image optimizer fetches these internally on every request.
-  // /sitemap.xml is the one exception: each clinic site serves its own.
-  matcher: ["/((?!_next|api|.*\\..*).*)", "/sitemap.xml"],
+  // Each clinic site's own sitemap.xml is the exception.
+  matcher: ["/((?!_next|api|.*\\..*).*)", "/sitemap.xml", "/s/:slug/sitemap.xml"],
 };

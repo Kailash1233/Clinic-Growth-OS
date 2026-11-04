@@ -4,6 +4,8 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { BlogGenerationError, generateBlogDraft, hasActiveSubscription } from "@/lib/blog";
 
 /** Owner asks for a new draft now, instead of waiting for the weekly job. The draft still needs approval. */
+export const maxDuration = 60;
+
 export async function POST() {
   let user;
   try {

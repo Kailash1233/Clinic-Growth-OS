@@ -80,7 +80,7 @@ export default function DomainConnectForm({
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-brand-600 px-5 py-2 font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+            className="rounded-lg bg-mint-500 px-5 py-2 font-medium text-white hover:bg-mint-600 disabled:opacity-50"
           >
             Connect
           </button>

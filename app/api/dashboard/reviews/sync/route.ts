@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth";
 import { syncClinicReviews } from "@/lib/reviewsSync";
 
 /** v2 §1: owner-triggered pull of their clinic's current Google reviews. */
+export const maxDuration = 60;
+
 export async function POST() {
   let user;
   try {

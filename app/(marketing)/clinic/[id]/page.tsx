@@ -10,6 +10,8 @@ import GenerateDemoButton from "@/components/GenerateDemoButton";
 import CheckoutButton from "@/components/CheckoutButton";
 import SimpleHeader from "@/components/SimpleHeader";
 import { generateInsights } from "@/lib/insights";
+import { buildGrowthReport } from "@/lib/report";
+import DetailedReport, { DownloadReportButton } from "@/components/report/DetailedReport";
 
 export default async function ClinicPage({ params }: { params: { id: string } }) {
   const clinic = await prisma.clinic.findUnique({
@@ -25,6 +27,7 @@ export default async function ClinicPage({ params }: { params: { id: string } })
   if (!clinic) notFound();
 
   const session = await getServerAuthSession();
+  const report = await buildGrowthReport(clinic.id);
   const score = clinic.scores[0];
   const health = clinic.siteHealthChecks[0];
   const activeSubscription = clinic.subscriptions[0]?.status === "active";
@@ -61,6 +64,7 @@ export default async function ClinicPage({ params }: { params: { id: string } })
             {clinic.address ?? "Address unavailable"}
             {clinic.category ? ` · ${clinic.category}` : ""}
           </p>
+          {report && <DownloadReportButton clinicId={clinic.id} className="mt-5" />}
         </div>
 
         {score && (
@@ -79,6 +83,14 @@ export default async function ClinicPage({ params }: { params: { id: string } })
           <div className="mt-10">
             <h2 className="mb-4 text-xl font-bold text-ink-900">What we found</h2>
             <InsightsGrid insights={insights} />
+          </div>
+        )}
+
+        {report && (
+          <div className="mt-12">
+            <h2 className="mb-1 text-xl font-bold text-ink-900">Detailed report</h2>
+            <p className="mb-5 text-sm text-ink-500">Every check behind your score, and exactly what to fix.</p>
+            <DetailedReport report={report} />
           </div>
         )}
 
@@ -124,6 +136,9 @@ export default async function ClinicPage({ params }: { params: { id: string } })
                   View demo site →
                 </a>
               )}
+              <Link href="/dashboard" prefetch={false} className="ml-4 inline-flex items-center gap-1 font-semibold text-ink-700 hover:underline">
+                Open dashboard →
+              </Link>
               {activeSubscription ? (
                 <p className="inline-flex items-center gap-2 rounded-full bg-mint-100 px-3 py-1.5 text-sm font-semibold text-mint-500">
                   Live and active

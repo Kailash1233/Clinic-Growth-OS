@@ -10,7 +10,23 @@ export type ResolvedSite = Awaited<ReturnType<typeof resolveClinicByHost>>;
  * only the hostname match differs. Memoized per-request so the layout (script
  * injection) and the page (content render) don't double-query.
  */
+const CLINIC_SLUG_HEADER = "x-clinic-slug";
+
+/** "" on a subdomain or custom domain; "/s/<slug>" when the site is served by path. */
+export function siteBasePath(): string {
+  const slug = headers().get(CLINIC_SLUG_HEADER);
+  return slug ? `/s/${slug}` : "";
+}
+
 export const resolveClinicByHost = cache(async () => {
+  const pathSlug = headers().get(CLINIC_SLUG_HEADER);
+  if (pathSlug) {
+    return prisma.siteSettings.findUnique({
+      where: { subdomainSlug: pathSlug },
+      include: { clinic: { include: { siteContent: true } } },
+    });
+  }
+
   const host = headers().get("host") ?? "";
   const hostname = host.split(":")[0].toLowerCase();
   const baseDomain = appBaseDomain();

@@ -17,6 +17,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 /** Admin-triggered rescan (requirements §11: "manually trigger... a score refresh for any clinic"). */
+export const maxDuration = 60;
+
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAdmin();
@@ -27,24 +29,42 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   const clinic = await prisma.clinic.findUnique({ where: { id: params.id } });
   if (!clinic) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  let websiteUri: string | null = null;
-  if (clinic.googlePlaceId) {
-    try {
-      const details = await getPlaceDetails(clinic.googlePlaceId);
-      websiteUri = details.websiteUri;
-    } catch {
-      // fall back to no-site scoring if Places lookup fails
-    }
+  if (!clinic.googlePlaceId) return NextResponse.json({ error: "Clinic has no linked Google Place" }, { status: 400 });
+
+  let details;
+  try {
+    details = await getPlaceDetails(clinic.googlePlaceId);
+  } catch (err) {
+    console.error("[admin/rescan]", err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: `Google Places lookup failed: ${err instanceof Error ? err.message.slice(0, 160) : "unknown error"}` }, { status: 502 });
   }
 
-  const result = await runHealthCheckAndScore(clinic.id, websiteUri, {
-    userRatingCount: clinic.reviewCount,
-    businessStatus: "OPERATIONAL",
-    hasPhotos: Array.isArray(clinic.photos) && (clinic.photos as unknown[]).length > 0,
-    hasRegularOpeningHours: !!clinic.hours,
-    hasWebsiteUri: !!websiteUri,
-    rating: clinic.rating,
+  await prisma.clinic.update({
+    where: { id: clinic.id },
+    data: {
+      name: details.name || clinic.name,
+      address: details.address || clinic.address,
+      phone: details.phone,
+      category: details.category,
+      hours: (details.hours as any) ?? undefined,
+      rating: details.rating,
+      reviewCount: details.userRatingCount,
+      businessStatus: details.businessStatus,
+    },
   });
 
-  return NextResponse.json({ overall: result.score.overallScore, subScores: result.subScores });
+  const result = await runHealthCheckAndScore(clinic.id, details.websiteUri, {
+    userRatingCount: details.userRatingCount,
+    businessStatus: details.businessStatus,
+    hasPhotos: details.photos.length > 0,
+    hasRegularOpeningHours: !!details.hours,
+    hasWebsiteUri: !!details.websiteUri,
+    rating: details.rating,
+  });
+
+  return NextResponse.json({
+    overall: result.score.overallScore,
+    subScores: result.subScores,
+    message: `Rescanned: score ${result.score.overallScore}/100`,
+  });
 }

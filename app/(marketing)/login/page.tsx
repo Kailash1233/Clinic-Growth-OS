@@ -2,13 +2,12 @@
 
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { LoginIllustration } from "@/components/illustrations";
 
 function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") ?? "/dashboard";
 
@@ -50,7 +49,8 @@ function LoginForm() {
     try {
       const res = await signIn("otp", { email, code, redirect: false });
       if (res?.error) throw new Error("Invalid or expired code");
-      router.push(next);
+      // Full page load so every part of the app (top bar, dashboard) picks up the new session.
+      window.location.assign(next.startsWith("/") ? next : "/dashboard");
     } catch (err: any) {
       setError(err.message ?? "Something went wrong");
     } finally {

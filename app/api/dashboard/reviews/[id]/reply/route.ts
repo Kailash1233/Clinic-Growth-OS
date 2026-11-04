@@ -11,6 +11,8 @@ async function loadOwnedReview(reviewId: string, clinicId: string | undefined) {
 }
 
 /** v2 §1: generate (or regenerate) an AI-drafted reply for one review. Owner edits and posts it themselves. */
+export const maxDuration = 60;
+
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   let user;
   try {

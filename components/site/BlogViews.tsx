@@ -23,10 +23,10 @@ function formatDate(d: Date | null): string {
   return d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "";
 }
 
-export function BlogIndex({ clinicName, posts }: { clinicName: string; posts: BlogPost[] }) {
+export function BlogIndex({ clinicName, posts, basePath = "" }: { clinicName: string; posts: BlogPost[]; basePath?: string }) {
   return (
     <main className="mx-auto max-w-3xl px-6 py-14">
-      <Link href="/" className="text-sm text-brand-700 hover:underline">
+      <Link href={basePath || "/"} className="text-sm text-brand-700 hover:underline">
         ← {clinicName}
       </Link>
       <h1 className="mt-4 text-3xl font-bold text-slate-900">Blog</h1>
@@ -36,7 +36,7 @@ export function BlogIndex({ clinicName, posts }: { clinicName: string; posts: Bl
         <ul className="mt-8 space-y-6">
           {posts.map((p) => (
             <li key={p.id} className="border-b border-slate-100 pb-6">
-              <Link href={`/blog/${p.slug}`} className="text-xl font-semibold text-slate-900 hover:text-brand-700">
+              <Link href={`${basePath}/blog/${p.slug}`} className="text-xl font-semibold text-slate-900 hover:text-brand-700">
                 {p.title}
               </Link>
               <p className="mt-1 text-sm text-slate-400">{formatDate(p.publishedAt)}</p>
@@ -49,7 +49,17 @@ export function BlogIndex({ clinicName, posts }: { clinicName: string; posts: Bl
   );
 }
 
-export function BlogArticle({ clinicName, post, canonicalUrl }: { clinicName: string; post: BlogPost; canonicalUrl: string | null }) {
+export function BlogArticle({
+  clinicName,
+  post,
+  canonicalUrl,
+  basePath = "",
+}: {
+  clinicName: string;
+  post: BlogPost;
+  canonicalUrl: string | null;
+  basePath?: string;
+}) {
   const sections = asSections(post.sections);
   const faq = asFaq(post.faq);
 
@@ -83,7 +93,7 @@ export function BlogArticle({ clinicName, post, canonicalUrl }: { clinicName: st
   return (
     <main className="mx-auto max-w-3xl px-6 py-14">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
-      <Link href="/blog" className="text-sm text-brand-700 hover:underline">
+      <Link href={`${basePath}/blog`} className="text-sm text-brand-700 hover:underline">
         ← All articles
       </Link>
       <article>
@@ -115,7 +125,7 @@ export function BlogArticle({ clinicName, post, canonicalUrl }: { clinicName: st
         </p>
       </article>
       <div className="mt-10">
-        <Link href="/" className="inline-block rounded-lg bg-brand-600 px-5 py-3 font-medium text-white hover:bg-brand-700">
+        <Link href={basePath || "/"} className="inline-block rounded-lg bg-brand-600 px-5 py-3 font-medium text-white hover:bg-brand-700">
           Contact {clinicName}
         </Link>
       </div>

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { BlogPost } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { resolveClinicByHost } from "@/lib/resolveSiteByHost";
+import { resolveClinicByHost, siteBasePath } from "@/lib/resolveSiteByHost";
 import { siteBaseUrl } from "@/lib/siteUrl";
 import ContactForm from "@/components/site/ContactForm";
 import { CallButton, WhatsAppButton } from "@/components/site/LeadButtons";
@@ -69,15 +69,16 @@ export default async function ClinicSitePage({ params }: Params) {
   if (!site || !route) notFound();
 
   const clinic = site.clinic;
+  const basePath = siteBasePath();
 
   if (route.kind === "blog-index") {
-    return <BlogIndex clinicName={clinic.name} posts={await publishedPosts(clinic.id)} />;
+    return <BlogIndex clinicName={clinic.name} posts={await publishedPosts(clinic.id)} basePath={basePath} />;
   }
   if (route.kind === "blog-post") {
     const post = await publishedPost(clinic.id, route.slug);
     if (!post) notFound();
     const base = siteBaseUrl(site);
-    return <BlogArticle clinicName={clinic.name} post={post} canonicalUrl={base ? `${base}/blog/${post.slug}` : null} />;
+    return <BlogArticle clinicName={clinic.name} post={post} canonicalUrl={base ? `${base}/blog/${post.slug}` : null} basePath={basePath} />;
   }
 
   const content = clinic.siteContent;
@@ -153,14 +154,14 @@ export default async function ClinicSitePage({ params }: Params) {
         <section className="mx-auto max-w-3xl px-6 py-12">
           <div className="flex items-baseline justify-between">
             <h2 className="text-xl font-semibold text-slate-900">Latest articles</h2>
-            <Link href="/blog" className="text-sm text-brand-700 hover:underline">
+            <Link href={`${basePath}/blog`} className="text-sm text-brand-700 hover:underline">
               View all
             </Link>
           </div>
           <ul className="mt-4 space-y-3">
             {latestPosts.map((p) => (
               <li key={p.id}>
-                <Link href={`/blog/${p.slug}`} className="font-medium text-slate-900 hover:text-brand-700">
+                <Link href={`${basePath}/blog/${p.slug}`} className="font-medium text-slate-900 hover:text-brand-700">
                   {p.title}
                 </Link>
                 <p className="text-sm text-slate-600">{p.metaDescription}</p>
