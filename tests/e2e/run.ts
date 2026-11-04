@@ -255,6 +255,12 @@ async function main() {
     assert(r.status() === 400, `status ${r.status()}`);
   });
 
+  await step("If Google refuses the key, search answers 502 with a clear message (not a crash)", async () => {
+    const r = await page.request.post(`${APP}/api/clinics/search`, { data: { query: "google-refuses clinic", turnstileToken: GOOD_TOKEN } });
+    const data = await r.json();
+    assert(r.status() === 502 && /couldn't reach Google/.test(data.error), `${r.status()} ${JSON.stringify(data)}`);
+  });
+
   await step("Audit: search → Places + PageSpeed + site checks → Growth Report", async () => {
     await page.goto(APP, { waitUntil: "networkidle" });
     await page.locator('input[placeholder="Enter your business name"]').first().fill("Sunrise Dental Care Chennai");

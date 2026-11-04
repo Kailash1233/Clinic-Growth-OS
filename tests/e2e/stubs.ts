@@ -79,6 +79,9 @@ export async function startStubs() {
     // Google Places API (New)
     if (p === "/places.googleapis.com/v1/places:searchText") {
       if (!req.headers["x-goog-api-key"]) return send(403, { error: "no key" });
+      if (JSON.parse(body.toString()).textQuery?.includes("google-refuses")) {
+        return send(403, { error: { code: 403, message: "The caller does not have permission", status: "PERMISSION_DENIED" } });
+      }
       return send(200, { places: [place()] });
     }
     if (p.startsWith(`/places.googleapis.com/v1/places/${PLACE_ID}/photos/`)) return send(200, PNG, "image/png");

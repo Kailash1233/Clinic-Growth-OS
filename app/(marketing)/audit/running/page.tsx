@@ -30,8 +30,8 @@ export default function AuditRunningPage() {
       body: JSON.stringify({ query: pending.query, turnstileToken: pending.token }),
     })
       .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "We couldn't find that business.");
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error ?? "Something went wrong. Please try again.");
         setFetchOutcome({ ok: true, clinicId: data.clinic.id });
       })
       .catch((err: Error) => {
