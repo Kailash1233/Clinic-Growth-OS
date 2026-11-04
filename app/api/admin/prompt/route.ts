@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { PROMPT_TEMPLATE_KEY, resolveActivePrompt } from "@/lib/openai";
+import { PROMPT_TEMPLATE_KEY, resolveActivePrompt } from "@/lib/ai";
 
 /** Requirements §11: edit the global prompt template without a code deploy. */
 export async function GET() {

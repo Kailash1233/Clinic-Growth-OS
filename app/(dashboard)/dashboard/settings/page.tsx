@@ -23,6 +23,8 @@ export default async function SettingsPage() {
           gscVerificationValue={settings.gscVerificationValue}
           customHeaderScripts={settings.customHeaderScripts}
           customBodyScripts={settings.customBodyScripts}
+          blogAutoGenerate={settings.blogAutoGenerate}
+          photoRemindersEnabled={settings.photoRemindersEnabled}
         />
       </div>
     </div>

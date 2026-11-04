@@ -3,6 +3,8 @@
  * Docs: https://developers.google.com/maps/documentation/places/web-service/place-search
  */
 
+import { requireEnv } from "@/lib/env";
+
 const PLACES_BASE = "https://places.googleapis.com/v1";
 
 export type PlaceSearchResult = {
@@ -20,11 +22,7 @@ export type PlaceSearchResult = {
   editorialSummary: string | null;
 };
 
-function requireKey(): string {
-  const key = process.env.GOOGLE_PLACES_API_KEY;
-  if (!key) throw new Error("GOOGLE_PLACES_API_KEY is not configured");
-  return key;
-}
+const requireKey = () => requireEnv("GOOGLE_PLACES_API_KEY");
 
 const FIELD_MASK = [
   "id",
@@ -47,6 +45,7 @@ const FIELD_MASK = [
 export async function searchPlaceByText(query: string): Promise<PlaceSearchResult[]> {
   const res = await fetch(`${PLACES_BASE}/places:searchText`, {
     method: "POST",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": requireKey(),
@@ -86,6 +85,7 @@ export function placePhotoUrl(photoResourceName: string, maxWidthPx = 800): stri
 
 export async function getPlaceDetails(placeId: string): Promise<PlaceSearchResult> {
   const res = await fetch(`${PLACES_BASE}/places/${placeId}`, {
+    cache: "no-store",
     headers: {
       "X-Goog-Api-Key": requireKey(),
       "X-Goog-FieldMask": FIELD_MASK,
@@ -128,6 +128,7 @@ export type PlaceReview = {
  */
 export async function getPlaceReviews(placeId: string): Promise<PlaceReview[]> {
   const res = await fetch(`${PLACES_BASE}/places/${placeId}`, {
+    cache: "no-store",
     headers: {
       "X-Goog-Api-Key": requireKey(),
       "X-Goog-FieldMask": "reviews",

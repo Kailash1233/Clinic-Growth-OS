@@ -31,6 +31,7 @@ async function fetchWithTimeout(url: string): Promise<Response | null> {
     return await fetch(url, {
       signal: controller.signal,
       redirect: "follow",
+      cache: "no-store",
       headers: { "User-Agent": "ClinicGrowthOS-HealthCheck/1.0" },
     });
   } catch {

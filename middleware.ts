@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const APP_BASE_DOMAIN = process.env.APP_BASE_DOMAIN ?? "yourbrand.in";
+const APP_BASE_DOMAIN = (process.env.APP_BASE_DOMAIN ?? "localhost").toLowerCase();
 
 function isAppHost(hostname: string): boolean {
   return (
@@ -23,7 +23,7 @@ function isAppHost(hostname: string): boolean {
  */
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
-  const hostname = host.split(":")[0];
+  const hostname = host.split(":")[0].toLowerCase();
 
   if (isAppHost(hostname)) {
     return NextResponse.next();
@@ -39,5 +39,6 @@ export const config = {
   // (favicon.ico, /screenshots/*.png, robots.txt, etc.) — static assets must
   // never be rewritten into the per-host clinic-site renderer, and Next's
   // own image optimizer fetches these internally on every request.
-  matcher: ["/((?!_next|api|.*\\..*).*)"],
+  // /sitemap.xml is the one exception: each clinic site serves its own.
+  matcher: ["/((?!_next|api|.*\\..*).*)", "/sitemap.xml"],
 };

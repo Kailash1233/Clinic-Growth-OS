@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { generateSentimentSummary } from "@/lib/openai";
+import { generateSentimentSummary } from "@/lib/ai";
 
 /** v2 §1: on-demand sentiment rollup over the clinic's most recent reviews. */
 export async function POST() {
@@ -22,7 +22,7 @@ export async function POST() {
   const summary = await generateSentimentSummary(reviews.map((r) => ({ rating: r.rating, text: r.text })));
 
   await prisma.generationUsage.create({
-    data: { api: "openai", userId: user.id, clinicId: user.clinicId, costEstimate: 0.005 },
+    data: { api: "groq", userId: user.id, clinicId: user.clinicId, costEstimate: 0 },
   });
 
   return NextResponse.json({ summary });

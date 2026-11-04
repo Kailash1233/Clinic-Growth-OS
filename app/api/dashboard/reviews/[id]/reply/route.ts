@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { generateReviewReply } from "@/lib/openai";
+import { generateReviewReply } from "@/lib/ai";
 
 async function loadOwnedReview(reviewId: string, clinicId: string | undefined) {
   const review = await prisma.review.findUnique({ where: { id: reviewId }, include: { clinic: true } });
@@ -30,7 +30,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   });
 
   await prisma.generationUsage.create({
-    data: { api: "openai", userId: user.id, clinicId: review.clinicId, costEstimate: 0.005 },
+    data: { api: "groq", userId: user.id, clinicId: review.clinicId, costEstimate: 0 },
   });
 
   const updated = await prisma.review.update({

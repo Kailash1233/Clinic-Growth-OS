@@ -9,6 +9,8 @@ const bodySchema = z.object({
   gscVerificationValue: z.string().max(500).nullable().optional(),
   customHeaderScripts: z.string().max(20000).nullable().optional(),
   customBodyScripts: z.string().max(20000).nullable().optional(),
+  blogAutoGenerate: z.boolean().optional(),
+  photoRemindersEnabled: z.boolean().optional(),
 });
 
 /**

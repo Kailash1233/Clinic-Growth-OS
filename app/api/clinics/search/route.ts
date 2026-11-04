@@ -34,7 +34,17 @@ export async function POST(req: NextRequest) {
   }
 
   const session = await getServerAuthSession();
-  const result = await ingestClinicByQuery(query, session?.user?.id ?? null);
+  let result;
+  try {
+    result = await ingestClinicByQuery(query, session?.user?.id ?? null);
+  } catch (err) {
+    // Usually Google Places refusing the key (billing, API not enabled, restrictions).
+    console.error("[search] audit failed:", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: "We couldn't reach Google to look up that business. Please try again in a few minutes." },
+      { status: 502 }
+    );
+  }
 
   if (!result) {
     return NextResponse.json({ error: "No clinic found matching that search" }, { status: 404 });
