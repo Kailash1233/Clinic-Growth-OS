@@ -296,6 +296,7 @@ the database named in `E2E_DATABASE_URL` is dropped and recreated.
    | Variable | Production value |
    |---|---|
    | `DATABASE_URL` | Neon **pooled** URL + `&pgbouncer=true` |
+   | `DIRECT_DATABASE_URL` | Neon **direct** URL. With this set, every deploy applies new database migrations automatically. |
    | `NEXTAUTH_URL` | `https://clinicgrowth.in` |
    | `APP_BASE_DOMAIN` | `clinicgrowth.in` |
    | `NEXTAUTH_SECRET`, `CRON_SECRET` | new random values |
