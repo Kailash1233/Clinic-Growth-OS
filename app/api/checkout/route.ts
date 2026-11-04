@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { createSubscription, type PlanTier } from "@/lib/razorpay";
+import { createSubscription, describeRazorpayError, type PlanTier } from "@/lib/razorpay";
 
 const bodySchema = z.object({
   clinicId: z.string(),
@@ -35,8 +35,9 @@ export async function POST(req: NextRequest) {
       customerNotifyEmail: user.email ?? undefined,
     });
   } catch (err) {
-    console.error("[checkout]", err);
-    return NextResponse.json({ error: "Payments are unavailable right now. Please try again shortly." }, { status: 502 });
+    const reason = describeRazorpayError(err);
+    console.error(`[checkout] ${planTier}: ${reason}`, err);
+    return NextResponse.json({ error: `Couldn't start the payment: ${reason}` }, { status: 502 });
   }
 
   await prisma.subscription.create({

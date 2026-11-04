@@ -12,7 +12,7 @@ import { getPageSpeedScores } from "@/lib/pagespeed";
 import { groqJson, groqModel } from "@/lib/groq";
 import { getTransporter, sendEmail } from "@/lib/email";
 import { deleteFile, uploadFile } from "@/lib/storage";
-import { getRazorpayClient } from "@/lib/razorpay";
+import { describeRazorpayError, getRazorpayClient } from "@/lib/razorpay";
 
 type Check = { name: string; run: () => Promise<string>; fix: string };
 
@@ -102,12 +102,19 @@ const checks: Check[] = [
     fix: "Check RAZORPAY_KEY_ID/SECRET are a matching pair (same Test or Live mode as the plans) and the plan ids",
     run: async () => {
       const rp = getRazorpayClient();
-      const [a, b] = await Promise.all([
-        rp.plans.fetch(process.env.RAZORPAY_PLAN_STARTER!),
-        rp.plans.fetch(process.env.RAZORPAY_PLAN_GROWTH!),
-      ]);
+      let a, b;
+      try {
+        [a, b] = await Promise.all([rp.plans.fetch(process.env.RAZORPAY_PLAN_STARTER!), rp.plans.fetch(process.env.RAZORPAY_PLAN_GROWTH!)]);
+      } catch (err) {
+        throw new Error(describeRazorpayError(err));
+      }
       const mode = process.env.RAZORPAY_KEY_ID!.startsWith("rzp_live_") ? "LIVE" : "TEST";
-      return `${mode} mode, plans "${a.item.name}" and "${b.item.name}" found`;
+      try {
+        await rp.subscriptions.all({ count: 1 });
+      } catch (err) {
+        throw new Error(`plans found, but Subscriptions failed: ${describeRazorpayError(err)} (enable Subscriptions in the Razorpay dashboard)`);
+      }
+      return `${mode} mode, Subscriptions enabled, plans "${a.item.name}" (${a.period}) and "${b.item.name}" (${b.period}) found`;
     },
   },
 ];
