@@ -248,6 +248,12 @@ async function main() {
       assert(!html.includes(banned), `found "${banned}"`);
     }
     assert(await page.locator('input[placeholder="Enter your business name"]').first().isVisible(), "no search box");
+    const font = await page.evaluate(async () => {
+      await document.fonts.ready;
+      const family = getComputedStyle(document.querySelector("h1")!).fontFamily;
+      return { family, loaded: [...document.fonts].some((f) => f.status === "loaded") };
+    });
+    assert(font.loaded && !/^\s*(serif|Times)/i.test(font.family), `font not loaded: ${JSON.stringify(font)}`);
   });
 
   await step("Search rejects a request without a valid bot-check token", async () => {
