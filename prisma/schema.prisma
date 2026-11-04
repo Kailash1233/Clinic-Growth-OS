@@ -75,6 +75,7 @@ model Clinic {
   hours         Json?
   rating        Float?
   reviewCount   Int?     @map("review_count")
+  businessStatus String? @map("business_status")
   photos        Json?
   status        ClinicStatus @default(prospect)
   createdAt     DateTime @default(now()) @map("created_at")
@@ -103,6 +104,8 @@ model SiteHealthCheck {
   existingSiteUrl  String?  @map("existing_site_url")
   mobileFriendly   Boolean? @map("mobile_friendly")
   loadSpeedScore   Int?     @map("load_speed_score")
+  seoScore         Int?     @map("seo_score")
+  accessibilityScore Int?   @map("accessibility_score")
   isIndexed        Boolean? @map("is_indexed")
   conversionChecks Json?    @map("conversion_checks")
   checkedAt        DateTime @default(now()) @map("checked_at")

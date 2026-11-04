@@ -8,7 +8,8 @@ function columns(): { title: string; links: { label: string; href: string }[] }[
     title: "Product",
     links: [
       { label: "Get your score", href: "/" },
-      { label: "Login", href: "/login" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Dashboard", href: "/dashboard" },
     ],
   },
   ...(email ? [{ title: "Company", links: [{ label: "Contact", href: `mailto:${email}` }] }] : []),
@@ -46,7 +47,7 @@ export default function Footer() {
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
           <p className="text-xs text-white/40">© {new Date().getFullYear()} Clinic Growth. All rights reserved.</p>
           <Link
-            href="/login"
+            href="/"
             className="rounded-full bg-mint-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-mint-600"
           >
             Find My Clinic

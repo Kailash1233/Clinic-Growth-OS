@@ -143,6 +143,8 @@ async function waitForServer(url: string, timeoutMs = 60000) {
 
 /** Stands in for the Cloudflare widget script in the browser; the server still verifies the token. */
 async function fakeTurnstileScript(page: Page, token = GOOD_TOKEN) {
+  // Razorpay's checkout script can't load in the test sandbox; the payment itself is covered by the webhook check.
+  await page.route("https://checkout.razorpay.com/**", (route) => route.fulfill({ contentType: "application/javascript", body: "" }));
   await page.route("https://challenges.cloudflare.com/turnstile/**", (route) =>
     route.fulfill({
       contentType: "application/javascript",
@@ -284,6 +286,20 @@ async function main() {
     return `score ${score.overallScore}/100`;
   });
 
+  await step("Detailed report on the page, and a downloadable PDF", async () => {
+    await page.goto(`${APP}/clinic/${clinicId}`, { waitUntil: "networkidle" });
+    const html = await page.content();
+    for (const t of ["Detailed report", "Your top actions", "Mobile performance (40%)", "Click-to-call phone link", "How this score is calculated"]) {
+      assert(html.includes(t), `missing "${t}"`);
+    }
+    const r = await page.request.get(`${APP}/api/clinics/${clinicId}/report`);
+    const body = await r.body();
+    assert(r.status() === 200 && r.headers()["content-type"] === "application/pdf", `status ${r.status()} ${r.headers()["content-type"]}`);
+    assert(/attachment; filename="growth-report-sunrise-dental-care\.pdf"/.test(r.headers()["content-disposition"] ?? ""), r.headers()["content-disposition"]);
+    assert(body.subarray(0, 5).toString() === "%PDF-" && body.length > 3000, `pdf ${body.length} bytes`);
+    return `${Math.round(body.length / 1024)} KB PDF`;
+  });
+
   await step("Clinic photo copied to Supabase Storage (public bucket)", async () => {
     const clinic = await prisma.clinic.findUnique({ where: { id: clinicId } });
     const photos = clinic?.photos as string[];
@@ -337,6 +353,24 @@ async function main() {
     return `site at ${slug}.localhost`;
   });
 
+  await step("Signed in, the top bar shows the email, Dashboard and Sign out (not Login)", async () => {
+    for (const url of [`${APP}/clinic/${clinicId}`, APP, `${APP}/pricing`]) {
+      await page.goto(url, { waitUntil: "networkidle" });
+      await page.waitForSelector(`text=${OWNER}`, { timeout: 10000 });
+      assert(await page.locator('button:has-text("Sign out")').first().isVisible(), `no Sign out on ${url}`);
+      assert((await page.locator('a[href="/login"]').count()) === 0, `Login link still shown on ${url}`);
+    }
+  });
+
+  await step("Dashboard shows the clinic right after generating, without signing in again", async () => {
+    await page.goto(`${APP}/clinic/${clinicId}`, { waitUntil: "networkidle" });
+    await page.locator('a:has-text("Open dashboard")').click(); // client-side navigation
+    await page.waitForURL(`${APP}/dashboard`);
+    await page.waitForSelector('h1:has-text("Sunrise Dental Care")', { timeout: 15000 });
+    const html = await page.content();
+    assert(!html.includes("No clinic yet") && html.includes("85/100"), "overview did not show the clinic and its score");
+  });
+
   await step("Clinic website renders on its subdomain, photo served via next/image", async () => {
     const res = await page.goto(`http://${slug}.localhost:${PORT}/`, { waitUntil: "networkidle" });
     assert(res?.status() === 200, `status ${res?.status()}`);
@@ -349,6 +383,14 @@ async function main() {
       return { status: r.status, type: r.headers.get("content-type"), bytes: (await r.arrayBuffer()).byteLength };
     }, src);
     assert(served.status === 200 && served.type?.startsWith("image/") && served.bytes > 0, `image: ${JSON.stringify(served)}`);
+  });
+
+  await step("Clinic website also works by path /s/<slug> (how it is served on *.vercel.app)", async () => {
+    const res = await page.goto(`${APP}/s/${slug}`, { waitUntil: "networkidle" });
+    assert(res?.status() === 200, `status ${res?.status()}`);
+    assert((await page.content()).includes("Sunrise Dental Care in T. Nagar, Chennai"), "headline missing");
+    const missing = await page.goto(`${APP}/s/no-such-clinic`);
+    assert(missing?.status() === 404, `unknown slug: ${missing?.status()}`);
   });
 
   await step("Razorpay webhook: bad signature rejected, valid one activates the clinic", async () => {
@@ -367,6 +409,15 @@ async function main() {
     assert(ok.status() === 200, `valid signature got ${ok.status()}`);
     const clinic = await prisma.clinic.findUnique({ where: { id: clinicId }, include: { siteSettings: true } });
     assert(clinic?.status === "live" && clinic.siteSettings?.status === "live", `clinic ${clinic?.status}, site ${clinic?.siteSettings?.status}`);
+  });
+
+  await step("Pricing page and Plan & billing page show both plans; billing shows the active plan", async () => {
+    const pr = await page.goto(`${APP}/pricing`, { waitUntil: "networkidle" });
+    const ph = await page.content();
+    assert(pr?.status() === 200 && ph.includes("Starter") && ph.includes("Growth"), "pricing page");
+    await page.goto(`${APP}/dashboard/billing`, { waitUntil: "networkidle" });
+    const bh = await page.content();
+    assert(bh.includes("Plan &amp; billing") && bh.includes("Your current plan"), "billing page did not show the active plan");
   });
 
   await step("Patient contact form creates a lead shown in the dashboard", async () => {
@@ -429,6 +480,15 @@ async function main() {
     assert((await sitemap!.text()).includes(`/blog/${postSlug}`), "post missing from sitemap");
   });
 
+  await step("Blog and sitemap by path keep the /s/<slug> prefix in their links", async () => {
+    const post = await page.goto(`${APP}/s/${slug}/blog/${postSlug}`, { waitUntil: "networkidle" });
+    assert(post?.status() === 200, `post status ${post?.status()}`);
+    await page.goto(`${APP}/s/${slug}/blog`, { waitUntil: "networkidle" });
+    assert((await page.locator(`a[href="/s/${slug}/blog/${postSlug}"]`).count()) > 0, "blog index links lost the /s/ prefix");
+    const sm = await page.request.get(`${APP}/s/${slug}/sitemap.xml`);
+    assert(sm.status() === 200 && (await sm.text()).includes("<urlset"), `sitemap ${sm.status()}`);
+  });
+
   await step("Weekly photo reminder: emailed once per week, never twice", async () => {
     const first = await (await page.request.get(`${APP}/api/cron/photo-reminders`, { headers: { authorization: `Bearer ${CRON_SECRET}` } })).json();
     assert(first.sent === 1 && first.failed === 0, JSON.stringify(first));
@@ -454,14 +514,23 @@ async function main() {
     assert(r.status() === 401, `status ${r.status()}`);
   });
 
-  await step("Admin (from db:seed) signs in by email and sees the clinic", async () => {
+  await step("Admin signs in, sees the clinic, and Rescan / Regenerate / Sync reviews each work", async () => {
     const actx = await browser.newContext();
     const ap = await actx.newPage();
     await fakeTurnstileScript(ap);
     await signIn(ap, ADMIN, "/admin");
     const ok = await ap.waitForSelector("text=Sunrise Dental Care", { timeout: 15000 }).then(() => true, () => false);
+    if (!ok) {
+      await actx.close();
+      throw new Error("clinic not listed in admin");
+    }
+    const row = ap.locator("tr", { hasText: "Sunrise Dental Care" });
+    // Each button runs its own action and reports its own result.
+    for (const [label, expected] of [["Rescan", /Rescanned: score \d+\/100/], ["Regenerate", /New site copy/], ["Sync reviews", /2 reviews synced from Google/]] as const) {
+      await row.locator(`button:has-text("${label}")`).click();
+      await row.locator("p[role=status]", { hasText: expected }).waitFor({ timeout: 30000 });
+    }
     await actx.close();
-    assert(ok, "clinic not listed in admin");
   });
 
   await step("No browser errors on any page", async () => {

@@ -6,27 +6,36 @@ import Link from "next/link";
 export default function NavAuthStatus() {
   const { data: session, status } = useSession();
 
-  if (status === "loading") return null;
+  if (status === "loading") return <span className="h-8 w-24 animate-pulse rounded-full bg-ink-100" />;
 
-  if (!session) {
+  if (!session?.user) {
     return (
-      <Link href="/login" className="text-sm font-semibold text-mint-500 hover:underline">
-        Sign in
-      </Link>
+      <div className="flex items-center gap-4 text-sm">
+        <Link href="/pricing" className="font-semibold text-ink-700 hover:text-ink-900">
+          Pricing
+        </Link>
+        <Link href="/login" className="rounded-full bg-mint-500 px-4 py-2 font-semibold text-white hover:bg-mint-600">
+          Login
+        </Link>
+      </div>
     );
   }
 
   return (
     <div className="flex items-center gap-4 text-sm">
-      <Link href="/dashboard" className="font-semibold text-mint-500 hover:underline">
-        Dashboard
+      <span className="hidden max-w-[14rem] truncate text-ink-500 md:inline">{session.user.email}</span>
+      <Link href="/pricing" className="font-semibold text-ink-700 hover:text-ink-900">
+        Pricing
       </Link>
       {session.user.role === "admin" && (
-        <Link href="/admin" className="font-semibold text-mint-500 hover:underline">
+        <Link href="/admin" prefetch={false} className="font-semibold text-ink-700 hover:text-ink-900">
           Admin
         </Link>
       )}
-      <button onClick={() => signOut({ callbackUrl: "/" })} className="text-ink-400 hover:text-ink-700">
+      <Link href="/dashboard" prefetch={false} className="rounded-full bg-mint-500 px-4 py-2 font-semibold text-white hover:bg-mint-600">
+        Dashboard
+      </Link>
+      <button onClick={() => signOut({ callbackUrl: "/" })} className="font-semibold text-ink-500 hover:text-ink-900">
         Sign out
       </button>
     </div>

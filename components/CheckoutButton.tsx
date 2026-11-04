@@ -13,10 +13,14 @@ export default function CheckoutButton({
   clinicId,
   planTier,
   clinicName,
+  label,
+  block,
 }: {
   clinicId: string;
   planTier: "starter" | "growth";
   clinicName: string;
+  label?: string;
+  block?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +44,7 @@ export default function CheckoutButton({
         subscription_id: data.subscriptionId,
         name: "Clinic Growth",
         description: `${clinicName} — ${planTier} plan`,
-        theme: { color: "#1FB579" },
+        theme: { color: "#094413" },
         handler: () => {
           window.location.reload();
         },
@@ -59,9 +63,9 @@ export default function CheckoutButton({
       <button
         onClick={handleCheckout}
         disabled={loading}
-        className="rounded-full bg-ink-900 px-6 py-3 font-semibold text-white transition hover:bg-ink-700 disabled:opacity-50"
+        className={`${block ? "w-full rounded-lg py-2.5 text-sm" : "rounded-full px-6 py-3"} bg-mint-500 font-semibold text-white transition hover:bg-mint-600 disabled:opacity-50`}
       >
-        {loading ? "Starting checkout…" : `Activate — ${planTier} plan`}
+        {loading ? "Starting checkout…" : label ?? `Activate — ${planTier} plan`}
       </button>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>

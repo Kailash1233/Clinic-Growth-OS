@@ -78,7 +78,7 @@ function ReviewCard({ review, onChange }: { review: ReviewRow; onChange: (r: Rev
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="text-xs font-medium text-brand-700 underline disabled:opacity-50"
+            className="text-xs font-medium text-mint-500 underline disabled:opacity-50"
           >
             {generating ? "Generating…" : draft ? "Regenerate" : "Generate reply"}
           </button>
@@ -162,7 +162,7 @@ export default function ReviewInbox({
         <button
           onClick={handleSync}
           disabled={syncing || !hasGooglePlace}
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+          className="rounded-lg bg-mint-500 px-4 py-2 text-sm font-medium text-white hover:bg-mint-600 disabled:opacity-50"
           title={hasGooglePlace ? undefined : "No linked Google Place yet"}
         >
           {syncing ? "Syncing…" : "Sync latest reviews"}
@@ -178,7 +178,7 @@ export default function ReviewInbox({
 
       {error && <p className="text-sm text-red-600">{error}</p>}
       {sentiment && (
-        <div className="rounded-lg bg-brand-50 p-4 text-sm text-brand-900">
+        <div className="rounded-lg bg-mint-50 p-4 text-sm text-mint-900">
           <span className="font-medium">Sentiment: </span>
           {sentiment}
         </div>

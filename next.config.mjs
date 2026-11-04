@@ -11,6 +11,9 @@ function supabaseImagePattern() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
+  // Never serve a cached copy of a dynamic page on client-side navigation: the
+  // dashboard must reflect a site generated or a plan bought a moment ago.
+  experimental: { staleTimes: { dynamic: 0 } },
   images: {
     remotePatterns: [
       ...supabaseImagePattern(),

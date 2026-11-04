@@ -1,10 +1,11 @@
+import { NoClinic, PageHeader } from "@/components/app/ui";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import LeadsTable from "@/components/LeadsTable";
 
 export default async function LeadsPage() {
   const user = await requireUser();
-  if (!user.clinicId) return <p className="text-slate-500">No clinic on this account yet.</p>;
+  if (!user.clinicId) return <NoClinic />;
 
   const leads = await prisma.lead.findMany({
     where: { clinicId: user.clinicId },
@@ -13,9 +14,12 @@ export default async function LeadsPage() {
   });
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold">Leads</h1>
-      <div className="mt-6">
+    <div>
+      <PageHeader
+        title="Leads"
+        description="Every patient enquiry from your website: contact-form messages, Call taps and WhatsApp taps. Convert a lead into a patient once they book."
+      />
+      <div>
         <LeadsTable
           initialLeads={leads.map((lead) => ({
             id: lead.id,

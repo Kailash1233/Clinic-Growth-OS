@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { resolveActivePrompt } from "@/lib/ai";
 import PromptEditorForm from "@/components/PromptEditorForm";
+import { PageHeader } from "@/components/app/ui";
 
 export default async function AdminPromptPage() {
   await requireAdmin();
@@ -8,12 +9,11 @@ export default async function AdminPromptPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold">Site-generation prompt</h1>
-      <p className="mt-2 text-slate-600">
-        Editing this changes what the AI (Groq) generates for every clinic's demo site copy — no deploy needed.
-        Bump the version string so future generations are attributable (site_content.prompt_version).
-      </p>
-      <div className="mt-6">
+      <PageHeader
+        title="Prompt template"
+        description="The system prompt the AI uses to write every clinic's website copy. Changes apply to the next generation, no deploy needed. Bump the version so each site records which prompt wrote it."
+      />
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <PromptEditorForm systemPrompt={active.systemPrompt} version={active.version} />
       </div>
     </div>

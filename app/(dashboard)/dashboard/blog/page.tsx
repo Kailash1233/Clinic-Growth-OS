@@ -1,3 +1,4 @@
+import { NoClinic, PageHeader } from "@/components/app/ui";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { asFaq, asSections, hasActiveSubscription } from "@/lib/blog";
@@ -6,7 +7,7 @@ import BlogApprovalList from "@/components/BlogApprovalList";
 
 export default async function BlogPage() {
   const user = await requireUser();
-  if (!user.clinicId) return <p className="text-slate-500">No clinic on this account yet.</p>;
+  if (!user.clinicId) return <NoClinic />;
 
   const [posts, settings, subscribed] = await Promise.all([
     prisma.blogPost.findMany({ where: { clinicId: user.clinicId }, orderBy: { generatedAt: "desc" } }),
@@ -15,19 +16,22 @@ export default async function BlogPage() {
   ]);
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold">Blog</h1>
-      <p className="mt-2 text-slate-600">
-        Each week we research what people near you search on Google — local keywords and the questions
-        they ask — and draft an SEO blog post answering them.{" "}
-        <strong className="font-semibold text-slate-800">Nothing is published until you approve it.</strong>
-      </p>
+    <div className="max-w-4xl">
+      <PageHeader
+        title="Blog"
+        description={
+          <>
+            Each week we research what people near you search on Google and draft an SEO post answering it.{" "}
+            <strong className="font-semibold text-slate-700">Nothing is published until you approve it.</strong>
+          </>
+        }
+      />
       {settings && !settings.blogAutoGenerate && (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
           Weekly drafts are turned off in Settings. You can still generate one here.
         </p>
       )}
-      <div className="mt-6">
+      <div className="mt-4">
         <BlogApprovalList
           canGenerate={subscribed}
           liveBaseUrl={siteBaseUrl(settings)}

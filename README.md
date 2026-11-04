@@ -270,8 +270,9 @@ the database named in `E2E_DATABASE_URL` is dropped and recreated.
    - Razorpay keys and plans (test first, then live after KYC)
    - new `NEXTAUTH_SECRET` and `CRON_SECRET`.
 4. **Deploy to Vercel** (section 4).
-5. **Domains on Vercel:** add `clinicgrowth.in`, `www.clinicgrowth.in` and the wildcard
-   `*.clinicgrowth.in`. The wildcard is what serves every clinic subdomain, and Vercel requires
+5. **Domains on Vercel:** on the bare `*.vercel.app` address, clinic sites work at
+   `/s/<slug>` with no setup. For `slug.clinicgrowth.in` addresses, add `clinicgrowth.in`,
+   `www.clinicgrowth.in` and the wildcard `*.clinicgrowth.in`. The wildcard is what serves every clinic subdomain, and Vercel requires
    the domain's nameservers to point at Vercel for it.
 6. **Razorpay webhook:** `https://clinicgrowth.in/api/webhooks/razorpay`. Then do a test payment
    with a Razorpay test card and check that the dashboard shows the subscription as Active.
@@ -319,7 +320,46 @@ the `/api/domains/ask` endpoint).
 
 ---
 
-## 5. Known limits
+## 5. How things work
+
+### Where clinic websites live
+
+| Setup | A clinic's site opens at |
+|---|---|
+| `APP_BASE_DOMAIN` ends in `.vercel.app` | `https://your-app.vercel.app/s/<slug>`. Vercel doesn't allow sub-subdomains such as `slug.your-app.vercel.app`. |
+| Your own domain with a `*.yourdomain` wildcard | `https://<slug>.yourdomain` |
+| The clinic connected its own domain | `https://theirclinic.in` |
+| Local (`APP_BASE_DOMAIN=localhost`) | `http://<slug>.localhost:3000` |
+
+The `/s/<slug>` address always works, including on your own domain. The app picks the right
+address automatically everywhere it shows a link.
+
+### How leads are collected
+
+Every clinic website captures three kinds of lead. Each one lands in **Dashboard → Leads**
+straight away, tagged with its source:
+
+1. **Contact form:** the "Get in touch" form on the clinic's site (name, phone, message).
+2. **Call tap:** a visitor taps the "Call" button.
+3. **WhatsApp tap:** a visitor taps the "WhatsApp" button.
+
+All three go to `POST /api/leads`, which is rate-limited per visitor. From the Leads page, the
+owner can call back and use **Make patient** to move a lead into the Patients list.
+
+### Pricing
+
+`/pricing` and **Dashboard → Plan & billing** show the name, description and price of your two
+Razorpay plans (`RAZORPAY_PLAN_STARTER`, `RAZORPAY_PLAN_GROWTH`), read from Razorpay and cached for
+an hour. Change a plan's name or description in the Razorpay dashboard and the site follows.
+
+### Growth Report
+
+The report page (`/clinic/<id>`) shows every check behind the score: each factor's weight, the
+points it adds, pass/partial/fix for each signal, and what to do about each gap. **Download full
+report (PDF)** (`/api/clinics/<id>/report`) produces the same report as a PDF file. The owner
+dashboard links to both.
+
+## 6. Known limits
 
 - The request rate limiter is in memory, per server instance. It's fine for one server; across many
   Vercel instances, a shared store such as Upstash Redis would make it exact.
