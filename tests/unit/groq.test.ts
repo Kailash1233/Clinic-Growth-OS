@@ -17,6 +17,7 @@ test("sends an OpenAI-compatible JSON-mode request to Groq with the configured m
     assert.equal((m.calls[0].init.headers as Record<string, string>).Authorization, "Bearer gsk_test");
     const body = JSON.parse(m.calls[0].init.body as string);
     assert.equal(body.model, "llama-3.1-8b-instant");
+    assert.equal(body.reasoning_effort, undefined); // only sent to gpt-oss models
     assert.deepEqual(body.response_format, { type: "json_object" });
     assert.match(body.messages[1].content, /exactly this shape/);
   } finally {
@@ -24,11 +25,13 @@ test("sends an OpenAI-compatible JSON-mode request to Groq with the configured m
   }
 }));
 
-test("defaults to llama-3.3-70b-versatile", withEnv({ GROQ_API_KEY: "k", GROQ_MODEL: undefined }, async () => {
+test("defaults to openai/gpt-oss-120b with low reasoning effort", withEnv({ GROQ_API_KEY: "k", GROQ_MODEL: undefined }, async () => {
   const m = mockFetch(() => completion(`{"reply":"ok"}`));
   try {
     await call();
-    assert.equal(JSON.parse(m.calls[0].init.body as string).model, "llama-3.3-70b-versatile");
+    const body = JSON.parse(m.calls[0].init.body as string);
+    assert.equal(body.model, "openai/gpt-oss-120b");
+    assert.equal(body.reasoning_effort, "low");
   } finally {
     m.restore();
   }

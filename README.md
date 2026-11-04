@@ -15,7 +15,7 @@ Full product spec: [`docs/requirements.md`](docs/requirements.md).
 | Database | PostgreSQL + Prisma (local, Neon or Supabase) | Free tiers |
 | Login | Email one-time code (Auth.js) | — |
 | Business data and site audit | Google Places API (New), PageSpeed Insights | Free monthly allowance; Places needs billing enabled |
-| AI writing | Groq (Llama 3.3 70B by default) | Free tier |
+| AI writing | Groq (`openai/gpt-oss-120b`, an open-weight model) | Free tier |
 | Email | Gmail SMTP with an App Password | Free |
 | Photo storage | Supabase Storage | Free tier |
 | Bot protection | Cloudflare Turnstile | Free |
@@ -77,12 +77,15 @@ the scheduled jobs automatically. Use different values for local and production.
 6. **APIs & Services → Quotas**: set a daily cap on Places so a bug can't run up a bill.
 7. Put the same key in both variables.
 
-### 1.4 Groq / Llama (`GROQ_API_KEY`)
+### 1.4 Groq (`GROQ_API_KEY`)
 
 1. Sign up at https://console.groq.com (no card needed).
 2. **API Keys → Create API Key** → copy it (starts with `gsk_`).
 3. Optional: `GROQ_MODEL` picks another model id from https://console.groq.com/docs/models.
-   The default is `llama-3.3-70b-versatile`.
+   The default is `openai/gpt-oss-120b`. Groq has retired its Llama chat models. The
+   `llama-prompt-guard` models are safety classifiers that can't write text, so don't use them.
+   To see the models your key can use:
+   `curl -s https://api.groq.com/openai/v1/models -H "Authorization: Bearer YOUR_KEY"`
 4. The free tier has per-minute and per-day request limits, shown in the Groq console. They are
    enough for testing and a small number of clinics.
 

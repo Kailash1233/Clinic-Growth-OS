@@ -2,7 +2,8 @@ import type { z } from "zod";
 import { requireEnv } from "@/lib/env";
 
 const GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
-export const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
+// Groq retired its Llama chat models; gpt-oss-120b is the open-weight model it serves for chat.
+export const DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b";
 const REQUEST_TIMEOUT_MS = 60_000;
 
 export class AiGenerationError extends Error {}
@@ -26,6 +27,8 @@ async function chat(messages: ChatMessage[]): Promise<string> {
       messages,
       temperature: 0.4,
       response_format: { type: "json_object" },
+      // gpt-oss models think before answering; "low" keeps that short for these writing tasks.
+      ...(groqModel().startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
     }),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
@@ -44,8 +47,8 @@ async function chat(messages: ChatMessage[]): Promise<string> {
 }
 
 /**
- * Asks a Llama model on Groq for one JSON object and validates it with zod.
- * Llama models on Groq support JSON mode but not strict schemas, so the shape
+ * Asks a chat model on Groq for one JSON object and validates it with zod.
+ * JSON mode works on every Groq chat model while strict schemas don't, so the shape
  * goes in the prompt and the zod schema enforces it. One retry tells the model
  * exactly what was wrong with its first answer.
  */

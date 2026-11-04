@@ -1,4 +1,4 @@
-# Site generation prompt — Groq (Llama), JSON mode
+# Site generation prompt — Groq, JSON mode
 
 Draft v1. This is the system + user prompt pair used by `lib/ai.ts` when generating a clinic's demo site content. The request goes to Groq in JSON mode (`response_format: { type: "json_object" }`); `lib/groq.ts` appends the expected shape to the prompt, validates the answer with zod, and retries once with the validation error if the shape is wrong. The schema at the bottom documents that shape.
 

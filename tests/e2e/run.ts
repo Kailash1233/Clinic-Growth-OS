@@ -311,7 +311,7 @@ async function main() {
     assert(!session?.user, `reused code signed in (status ${r.status()})`);
   });
 
-  await step("AI site generation with Groq (Llama)", async () => {
+  await step("AI site generation with Groq (gpt-oss-120b)", async () => {
     await page.locator('button:has-text("Generate my free AI demo site")').click();
     await page.waitForSelector("text=Sunrise Dental Care in T. Nagar, Chennai", { timeout: 30000 });
     const content = await prisma.siteContent.findUnique({ where: { clinicId } });
@@ -319,7 +319,7 @@ async function main() {
     const settings = await prisma.siteSettings.findUnique({ where: { clinicId } });
     slug = settings!.subdomainSlug;
     const call = stubs.log.groq.find((g) => g.system.includes("website content"));
-    assert(call?.model === "llama-3.3-70b-versatile", `model ${call?.model}`);
+    assert(call?.model === "openai/gpt-oss-120b", `model ${call?.model}`);
     const owner = await prisma.user.findUnique({ where: { email: OWNER } });
     assert(owner?.clinicId === clinicId, "owner not linked to clinic");
     return `site at ${slug}.localhost`;
